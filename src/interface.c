@@ -20,7 +20,7 @@ void igloo_interface_base_free(igloo_ro_t self)
 {
     igloo__interface_base_t *iface = igloo_INTERFACE_CAST(self);
 
-    if (iface->ifdesc->free)
+    if (iface->ifdesc && iface->ifdesc->free)
         iface->ifdesc->free(igloo_INTERFACE_BASIC_CALL(self));
 
     if (!igloo_RO_IS_NULL(iface->backend_object))

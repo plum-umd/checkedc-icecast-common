@@ -119,6 +119,19 @@ typedef struct {
 #endif
 } igloo_io_ifdesc_t;
 
+/* This creates a new IO handle from a interface description and state.
+ * Parameters:
+ *  ifdesc
+ *      The interface description to use.
+ *  backend_object
+ *      A object used by the backend or igloo_RO_NULL.
+ *  backend_userdata
+ *      A userdata pointer used by the backend or NULL.
+ *  name, associated
+ *      See refobject_new().
+ */
+igloo_io_t * igloo_io_new(const igloo_io_ifdesc_t *ifdesc, igloo_ro_t backend_object, void *backend_userdata, const char *name, igloo_ro_t associated);
+
 /* Read data from a IO handle.
  * Parameters:
  *  io
