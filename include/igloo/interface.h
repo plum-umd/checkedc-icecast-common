@@ -42,10 +42,22 @@ extern "C" {
  */
 typedef int (*igloo_interface_free_t)(igloo_INTERFACE_BASIC_ARGS);
 
+#define igloo_INTERFACE_DESCRIPTION_BASE__VERSION	1
 
 typedef struct {
+    size_t base_length;
+    int base_version;
+    size_t description_length;
     igloo_interface_free_t free;
 } igloo_interface_base_ifdesc_t;
+
+#define igloo_INTERFACE_DESCRIPTION_BASE(type, ...) \
+    .__base = { \
+        .base_length = sizeof(igloo_interface_base_ifdesc_t), \
+        .base_version = igloo_INTERFACE_DESCRIPTION_BASE__VERSION, \
+        .description_length = sizeof(type) \
+        , ## __VA_ARGS__ \
+    }
 
 #ifdef __cplusplus
 }

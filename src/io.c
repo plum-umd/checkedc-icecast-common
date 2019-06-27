@@ -32,28 +32,7 @@ igloo_RO_PUBLIC_TYPE(igloo_io_t,
 
 igloo_io_t * igloo_io_new(const igloo_io_ifdesc_t *ifdesc, igloo_ro_t backend_object, void *backend_userdata, const char *name, igloo_ro_t associated)
 {
-    igloo_io_t *io;
-
-    if (!ifdesc)
-        return NULL;
-
-    io = igloo_ro_new_raw(igloo_io_t, name, associated);
-
-    if (!io)
-        return NULL;
-
-    if (!igloo_RO_IS_NULL(backend_object)) {
-        if (igloo_ro_ref(backend_object) != 0) {
-            igloo_ro_unref(io);
-            return NULL;
-        }
-    }
-
-    io->ifdesc = ifdesc;
-    io->backend_object = backend_object;
-    io->backend_userdata = backend_userdata;
-
-    return io;
+    return igloo_interface_base_new(igloo_io_t, ifdesc, backend_object, backend_userdata, name, associated);
 }
 
 

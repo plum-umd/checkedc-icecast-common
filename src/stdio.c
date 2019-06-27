@@ -49,7 +49,9 @@ static int __get_fd_for_systemcall(igloo_INTERFACE_BASIC_ARGS)
 }
 
 static const igloo_io_ifdesc_t igloo_stdio_ifdesc = {
-    .__base = {.free = __free},
+    igloo_INTERFACE_DESCRIPTION_BASE(igloo_io_ifdesc_t,
+            .free = __free
+            ),
     .read = __read,
     .write = __write,
     .flush = __flush,
