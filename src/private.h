@@ -19,6 +19,8 @@
 #ifndef _LIBIGLOO__PRIVATE_H_
 #define _LIBIGLOO__PRIVATE_H_
 
+#include <igloo/interface.h>
+
 /* init/shutdown of the library */
 void igloo_thread_initialize(void);
 void igloo_thread_initialize_with_log_id(int log_id);
@@ -30,5 +32,24 @@ void igloo_resolver_shutdown(void);
 void igloo_log_initialize(void);
 void igloo_log_shutdown(void);
 
+/* Basic interface */
+#define igloo_interface_base(type) \
+    /* The base object. */ \
+    igloo_ro_base_t __base; \
+    /* The interface description */ \
+    const igloo_ ## type ## _ifdesc_t *ifdesc; \
+    /* Backend object */ \
+    igloo_ro_t backend_object; \
+    /* Backend userdata */ \
+    void *backend_userdata;
+
+typedef struct {
+    igloo_interface_base(interface_base)
+} igloo__interface_base_t;
+
+void igloo_interface_base_free(igloo_ro_t self);
+
+#define igloo_INTERFACE_CAST(obj) ((igloo__interface_base_t*)igloo_RO__GETBASE(obj))
+#define igloo_INTERFACE_BASIC_CALL(obj) (obj), &(igloo_INTERFACE_CAST(obj)->backend_object), &(igloo_INTERFACE_CAST(obj)->backend_userdata)
 
 #endif

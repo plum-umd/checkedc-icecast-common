@@ -20,13 +20,17 @@ pkginclude_HEADERS = \
     include/igloo/ro.h \
     include/igloo/types.h \
     include/igloo/typedef.h \
+    include/igloo/interface.h \
+    include/igloo/io.h \
     include/igloo/buffer.h \
     include/igloo/list.h \
     include/igloo/reportxml.h
 
 libigloo_la_SOURCES = \
     src/libigloo.c \
+    src/interface.c \
     src/ro.c \
+    src/io.c \
     src/buffer.c \
     src/list.c \
     src/reportxml.c
