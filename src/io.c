@@ -32,7 +32,13 @@ igloo_RO_PUBLIC_TYPE(igloo_io_t,
 
 igloo_io_t * igloo_io_new(const igloo_io_ifdesc_t *ifdesc, igloo_ro_t backend_object, void *backend_userdata, const char *name, igloo_ro_t associated)
 {
-    return igloo_interface_base_new(igloo_io_t, ifdesc, backend_object, backend_userdata, name, associated);
+    igloo_io_t *io = igloo_interface_base_new(igloo_io_t, ifdesc, backend_object, backend_userdata, name, associated);
+    if (!io)
+        return NULL;
+
+    io->touched = 1;
+
+    return io;
 }
 
 
