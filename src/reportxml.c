@@ -1137,7 +1137,7 @@ static igloo_reportxml_node_t *      __reportxml_database_build_node_ext(igloo_r
     }
 
     igloo_thread_mutex_lock(&(db->lock));
-    if (igloo_avl_get_by_key(db->definitions, igloo_RO_TO_TYPE(search, void *), (void**)&found) != 0) {
+    if (igloo_avl_get_by_key(db->definitions, (void*)search, (void**)&found) != 0) {
         igloo_thread_mutex_unlock(&(db->lock));
         igloo_ro_unref(search);
         return NULL;

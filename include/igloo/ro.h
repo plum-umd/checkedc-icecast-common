@@ -26,6 +26,7 @@ extern "C" {
 
 #include <stdarg.h>
 
+#include <igloo/config.h>
 #include "types.h"
 #include "thread.h"
 
@@ -88,11 +89,11 @@ struct igloo_ro_base_tag {
 int igloo_ro_new__return_zero(igloo_ro_t self, const igloo_ro_type_t *type, va_list ap);
 /* ---[ END PRIVATE ]--- */
 
-#ifdef igloo_HAVE_TYPE_ATTRIBUTE_TRANSPARENT_UNION
+#ifdef IGLOO_CTC_HAVE_TYPE_ATTRIBUTE_TRANSPARENT_UNION
 #define igloo_RO__GETBASE(x)		(((igloo_ro_t)(x)).subtype__igloo_ro_base_t)
 #define igloo_RO_NULL				((igloo_ro_t)(igloo_ro_base_t*)NULL)
 #define igloo_RO_IS_NULL(x)			(igloo_RO__GETBASE((x)) == NULL)
-#define	igloo_RO_TO_TYPE(x,type)    (igloo_RO_IS_VALID((x),type)  ? NULL : ((igloo_ro_t)(x)).subtype__ ## type)
+#define	igloo_RO_TO_TYPE(x,type)    (igloo_RO_IS_VALID((x),type) ? ((igloo_ro_t)(x)).subtype__ ## type : NULL)
 #else
 #define igloo_RO__GETBASE(x)		((igloo_ro_base_t*)(x))
 #define igloo_RO_NULL				NULL

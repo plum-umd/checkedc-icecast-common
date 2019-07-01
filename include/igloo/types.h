@@ -29,6 +29,8 @@ extern "C" {
 /* For size_t and ssize_t */
 #include <sys/types.h>
 
+#include <igloo/config.h>
+
 /* Included in case is not yet included */
 #include "typedef.h"
 
@@ -49,7 +51,7 @@ typedef struct igloo_reportxml_database_tag igloo_reportxml_database_t;
 typedef struct igloo_ro_base_tag igloo_ro_base_t;
 igloo_RO_FORWARD_TYPE(igloo_ro_base_t);
 
-#ifdef igloo_HAVE_TYPE_ATTRIBUTE_TRANSPARENT_UNION
+#ifdef IGLOO_CTC_HAVE_TYPE_ATTRIBUTE_TRANSPARENT_UNION
 typedef union __attribute__ ((__transparent_union__)) {
     /* Those are libigloo's own types */
     igloo_RO_TYPE(igloo_ro_base_t)

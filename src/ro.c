@@ -147,15 +147,16 @@ int             igloo_ro_unref(igloo_ro_t self)
         return -1;
     }
 
-    base->refc--;
-
-    if (base->refc) {
+    if (base->refc > 1) {
+        base->refc--;
         igloo_thread_mutex_unlock(&(base->lock));
         return 0;
     }
 
     if (base->type->type_freecb)
         base->type->type_freecb(self);
+
+    base->refc--;
 
     igloo_ro_unref(base->associated);
 

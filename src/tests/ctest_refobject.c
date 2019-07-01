@@ -152,21 +152,21 @@ static void test_sizes(void)
 {
     igloo_ro_t a;
 
-    a = igloo_ro_new(ctest_test_type_a_t);
+    a = (igloo_ro_t)igloo_ro_new(ctest_test_type_a_t);
     ctest_test("refobject created with size=sizeof(igloo_ro_base_t) + 1024", !igloo_RO_IS_NULL(a));
     ctest_test("un-referenced", igloo_ro_unref(a) == 0);
 
-    a = igloo_ro_new(ctest_test_type_b_t);
+    a = (igloo_ro_t)igloo_ro_new(ctest_test_type_b_t);
     ctest_test("refobject created with size=sizeof(igloo_ro_base_t) + 131072", !igloo_RO_IS_NULL(a));
     ctest_test("un-referenced", igloo_ro_unref(a) == 0);
 
-    a = igloo_ro_new(ctest_test_type_c_t);
+    a = (igloo_ro_t)igloo_ro_new(ctest_test_type_c_t);
     ctest_test("refobject created with size=sizeof(igloo_ro_base_t) - 1", igloo_RO_IS_NULL(a));
     if (!igloo_RO_IS_NULL(a)) {
         ctest_test("un-referenced", igloo_ro_unref(a) == 0);
     }
 
-    a = igloo_ro_new(ctest_test_type_d_t);
+    a = (igloo_ro_t)igloo_ro_new(ctest_test_type_d_t);
     ctest_test("refobject created with size=0", igloo_RO_IS_NULL(a));
     if (!igloo_RO_IS_NULL(a)) {
         ctest_test("un-referenced", igloo_ro_unref(a) == 0);

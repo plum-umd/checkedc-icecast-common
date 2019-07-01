@@ -97,8 +97,9 @@ int                     igloo_list_iterator_rewind(igloo_list_iterator_t *iterat
 do { \
     igloo_list_iterator_storage_t __igloo_list_iterator_storage; \
     igloo_list_iterator_t *__igloo_list_iterator = igloo_list_iterator_start((list), &__igloo_list_iterator_storage, sizeof(__igloo_list_iterator_storage)); \
+    igloo_ro_t __igloo_ret; \
     type * var; \
-    for (; !igloo_RO_IS_NULL((var) = igloo_RO_TO_TYPE(igloo_list_iterator_next(__igloo_list_iterator),type));) { \
+    for (; !igloo_RO_IS_NULL(__igloo_ret = igloo_list_iterator_next(__igloo_list_iterator)) && ((var) = igloo_RO_TO_TYPE(__igloo_ret,type));) { \
         code; \
         igloo_ro_unref((var)); \
     } \

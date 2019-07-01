@@ -72,5 +72,5 @@ igloo_ro_t     igloo_initialize(void)
 
     igloo_initialize__refc++;
 
-    return ret;
+    return (igloo_ro_t)ret;
 }
