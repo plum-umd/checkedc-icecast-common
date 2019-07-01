@@ -98,7 +98,7 @@ int igloo_ro_new__return_zero(igloo_ro_t self, const igloo_ro_type_t *type, va_l
 #define igloo_RO__GETBASE(x)		((igloo_ro_base_t*)(x))
 #define igloo_RO_NULL				NULL
 #define igloo_RO_IS_NULL(x)			((x) == NULL)
-#define igloo_RO_TO_TYPE(x,type)	((type*)(x))
+#define igloo_RO_TO_TYPE(x,type)	(igloo_RO_IS_VALID((x),type) ? (type*)(x) : (type*)NULL)
 #endif
 
 #define igloo_RO_GET_TYPE(x)		(igloo_RO__GETBASE((x)) == NULL ? NULL : igloo_RO__GETBASE((x))->type)
