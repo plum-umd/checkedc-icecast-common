@@ -141,16 +141,22 @@ static igloo_filter_result_t __handle(igloo_INTERFACE_BASIC_ARGS, igloo_ro_t obj
     time_t now;
     char pre[256+LOG_MAXLINELEN];
     int datelen;
+    char flags[3] = "  ";
 
     if (!msg)
         return igloo_FILTER_RESULT_DROP;
-    
+
+    if (msg->options & igloo_LOGMSG_OPT_DEVEL)
+        flags[0] = 'D';
+
+    if (msg->options & igloo_LOGMSG_OPT_ASKACK)
+        flags[1] = 'A';
 
     level = __level2str(msg->level);
 
     now = msg->ts.tv_sec;
     datelen = strftime(pre, sizeof(pre), "[%Y-%m-%d  %H:%M:%S]", localtime(&now)); 
-    snprintf(pre+datelen, sizeof(pre)-datelen, " %s %s/%s(%s:%zi) %s\n", level, msg->cat, msg->func, msg->codefile, msg->codeline, msg->string);
+    snprintf(pre+datelen, sizeof(pre)-datelen, " %s [%s] %s/%s(%s:%zi) %s\n", level, flags, msg->cat, msg->func, msg->codefile, msg->codeline, msg->string);
     igloo_io_write(igloo_RO_TO_TYPE(*backend_object, igloo_io_t), pre, strlen(pre));
 
     return igloo_FILTER_RESULT_PASS;
