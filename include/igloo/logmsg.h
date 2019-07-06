@@ -112,7 +112,37 @@ int igloo_logmsg_get_context(igloo_logmsg_t *msg, const char **msgid, const char
 int igloo_logmsg_get_message(igloo_logmsg_t *msg, igloo_loglevel_t *level, const char **string);
 int igloo_logmsg_get_extra(igloo_logmsg_t *msg, igloo_logmsg_opt_t *options, igloo_list_t **list);
 
+/* This creates a formater that allows writing of log messages to a logfile.
+ * Parameters:
+ *  backend
+ *  	The backend to write data to. Must be a igloo_io_t handle.
+ *  subformat
+ *  	Subformat to use. NULL for default.
+ *  	Must be NULL.
+ *  name, associated
+ *      See refobject_new().
+ */
 igloo_objecthandler_t 	* igloo_logmsg_formarter(igloo_ro_t backend, const char *subformat, const char *name, igloo_ro_t associated);
+
+/* This creates a filter for log messages.
+ * Parameters:
+ *  level_min
+ *  	Minimum log level.
+ *  level_max
+ *  	Maximum log leve.
+ *  options_required
+ *  	Options a message must have set.
+ *  options_absent
+ *  	Options a message must not have set.
+ *  ts_min
+ *  	Minimum timestamp or NULL.
+ *  ts_max
+ *  	Maximum timestamp or NULL.
+ *  cat
+ *      Message category/module or NULL.
+ *  name, associated
+ *      See refobject_new().
+ */
 igloo_filter_t 		* igloo_logmsg_filter(igloo_loglevel_t level_min, igloo_loglevel_t level_max, igloo_logmsg_opt_t options_required, igloo_logmsg_opt_t options_absent, const struct timespec * ts_min, const struct timespec * ts_max, const char *cat, const char *name, igloo_ro_t associated);
 
 #ifdef __cplusplus
