@@ -21,6 +21,7 @@
 #include <config.h>
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -308,4 +309,166 @@ int             igloo_ro_set_associated(igloo_ro_t self, igloo_ro_t associated)
     igloo_ro_unref(old);
 
     return 0;
+}
+
+igloo_ro_t      igloo_ro_clone(igloo_ro_t self, igloo_ro_cf_t required, igloo_ro_cf_t allowed, const char *name, igloo_ro_t associated)
+{
+    igloo_ro_base_t *base = igloo_RO__GETBASE(self);
+    igloo_ro_t ret = igloo_RO_NULL;
+
+    if (!base)
+        return igloo_RO_NULL;
+
+    allowed |= required;
+
+    if (!allowed)
+        allowed = igloo_RO_CF_DEFAULT;
+
+    igloo_thread_mutex_lock(&(base->lock));
+    if (!base->refc) {
+        igloo_thread_mutex_unlock(&(base->lock));
+        return igloo_RO_NULL;
+    }
+
+    if (base->type->type_clonecb)
+        ret = base->type->type_clonecb(self, required, allowed, name, associated);
+    igloo_thread_mutex_unlock(&(base->lock));
+
+    return ret;
+}
+
+igloo_ro_t      igloo_ro_convert(igloo_ro_t self, const igloo_ro_type_t *type, igloo_ro_cf_t required, igloo_ro_cf_t allowed, const char *name, igloo_ro_t associated)
+{
+    igloo_ro_base_t *base = igloo_RO__GETBASE(self);
+    igloo_ro_t ret = igloo_RO_NULL;
+
+    if (!base || !type)
+        return igloo_RO_NULL;
+
+    igloo_thread_mutex_lock(&(base->lock));
+    if (!base->refc) {
+        igloo_thread_mutex_unlock(&(base->lock));
+        return igloo_RO_NULL;
+    }
+
+    if (base->type == type) {
+        igloo_thread_mutex_unlock(&(base->lock));
+        return igloo_ro_clone(self, required, allowed, name, associated);
+    }
+
+    allowed |= required;
+
+    if (!allowed)
+        allowed = igloo_RO_CF_DEFAULT;
+
+    if (base->type->type_convertcb)
+        ret = base->type->type_convertcb(self, type, required, allowed, name, associated);
+
+    if (igloo_RO_IS_NULL(ret))
+        if (type->type_convertcb)
+            ret = type->type_convertcb(self, type, required, allowed, name, associated);
+    igloo_thread_mutex_unlock(&(base->lock));
+
+    return ret;
+}
+
+char *          igloo_ro_stringify(igloo_ro_t self)
+{
+    igloo_ro_base_t *base = igloo_RO__GETBASE(self);
+    char *ret = NULL;
+
+    if (!base)
+        return strdup("{igloo_RO_NULL}");
+
+    igloo_thread_mutex_lock(&(base->lock));
+    if (!base->refc) {
+        int len;
+        char buf;
+
+#define STRINGIFY_FORMAT_WEAK "{%s@%p, weak}", base->type->type_name, base
+        len = snprintf(&buf, 1, STRINGIFY_FORMAT_WEAK);
+        if (len > 2) {
+            /* We add 2 bytes just to make sure no buggy interpretation of \0 inclusion could bite us. */
+            ret = calloc(1, len + 2);
+            if (ret) {
+                snprintf(ret, len + 1, STRINGIFY_FORMAT_WEAK);
+            }
+        }
+
+        igloo_thread_mutex_unlock(&(base->lock));
+        return ret;
+    }
+
+    if (base->type->type_stringifycb) {
+        ret = base->type->type_stringifycb(self);
+    } else {
+        int len;
+        char buf;
+
+#define STRINGIFY_FORMAT_FULL "{%s@%p, strong, name=\"%s\", associated=%p}", base->type->type_name, base, base->name, igloo_RO__GETBASE(base->associated)
+        len = snprintf(&buf, 1, STRINGIFY_FORMAT_FULL);
+        if (len > 2) {
+            /* We add 2 bytes just to make sure no buggy interpretation of \0 inclusion could bite us. */
+            ret = calloc(1, len + 2);
+            if (ret) {
+                snprintf(ret, len + 1, STRINGIFY_FORMAT_FULL);
+            }
+        }
+    }
+    igloo_thread_mutex_unlock(&(base->lock));
+
+    return ret;
+}
+
+igloo_ro_cr_t   igloo_ro_compare(igloo_ro_t a, igloo_ro_t b)
+{
+    igloo_ro_base_t *base_a = igloo_RO__GETBASE(a);
+    igloo_ro_base_t *base_b = igloo_RO__GETBASE(b);
+    igloo_ro_cr_t ret = igloo_RO_CR__ERROR;
+
+    if (base_a == base_b)
+        return igloo_RO_CR_SAME;
+
+    if (!base_a || !base_b)
+        return igloo_RO_CR__ERROR;
+
+    igloo_thread_mutex_lock(&(base_a->lock));
+    igloo_thread_mutex_lock(&(base_b->lock));
+
+    if (!base_a->refc || !base_b->refc) {
+        igloo_thread_mutex_unlock(&(base_b->lock));
+        igloo_thread_mutex_unlock(&(base_a->lock));
+        return igloo_RO_CR__ERROR;
+    }
+
+    if (base_a->type->type_comparecb)
+        ret = base_a->type->type_comparecb(a, b);
+
+    if (ret == igloo_RO_CR__ERROR) {
+        ret = base_b->type->type_comparecb(b, a);
+
+        /* we switched arguments here, so we need to reverse the result */
+        switch (ret) {
+            case igloo_RO_CR__ERROR:
+            case igloo_RO_CR_EQUAL:
+            case igloo_RO_CR_NOTEQUAL:
+                /* those are the same in both directions */
+            break;
+            case igloo_RO_CR_ALESSTHANB:
+                ret = igloo_RO_CR_AGREATERTHANB;
+            break;
+            case igloo_RO_CR_AGREATERTHANB:
+                ret = igloo_RO_CR_ALESSTHANB;
+            break;
+            default:
+                /* Cases we do not yet handle or that are not a valid result. */
+                ret = igloo_RO_CR__ERROR;
+            break;
+        }
+    }
+
+    igloo_thread_mutex_unlock(&(base_b->lock));
+    igloo_thread_mutex_unlock(&(base_a->lock));
+
+    return ret;
 }
