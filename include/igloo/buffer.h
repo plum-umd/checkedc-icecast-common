@@ -81,6 +81,8 @@ void        igloo_buffer_preallocate(igloo_buffer_t *buffer, size_t request);
 int         igloo_buffer_get_data(igloo_buffer_t *buffer, const void **data, size_t *length);
 
 /* Gets data as a string. The string is '\0'-terminated.
+ * igloo_ro_stringify(buffer) will also return this buffer.
+ *
  * Parameters:
  *  buffery
  *      The buffer to operate on.
