@@ -43,6 +43,29 @@ static inline int check_type(const igloo_ro_type_t *type)
            type->type_length >= sizeof(igloo_ro_base_t);
 }
 
+
+static inline int igloo_RO_HAS_TYPE_raw_il(igloo_ro_t object, const igloo_ro_type_t *type)
+{
+    return !igloo_RO_IS_NULL(object) && igloo_RO_GET_TYPE(object) == type;
+}
+int             igloo_RO_HAS_TYPE_raw(igloo_ro_t object, const igloo_ro_type_t *type)
+{
+    return igloo_RO_HAS_TYPE_raw_il(object, type);
+}
+static inline int igloo_RO_IS_VALID_raw_li(igloo_ro_t object, const igloo_ro_type_t *type)
+{
+    return igloo_RO_HAS_TYPE_raw_il(object, type) && igloo_RO__GETBASE(object)->refc;
+}
+int             igloo_RO_IS_VALID_raw(igloo_ro_t object, const igloo_ro_type_t *type)
+{
+    return igloo_RO_IS_VALID_raw_li(object, type);
+}
+igloo_ro_t      igloo_RO_TO_TYPE_raw(igloo_ro_t object, const igloo_ro_type_t *type)
+{
+    return igloo_RO_IS_VALID_raw_li(object, type) ? object : igloo_RO_NULL;
+}
+
+
 igloo_ro_t      igloo_ro_new__raw(const igloo_ro_type_t *type, const char *name, igloo_ro_t associated)
 {
     igloo_ro_base_t *base;

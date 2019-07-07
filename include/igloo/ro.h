@@ -89,22 +89,25 @@ struct igloo_ro_base_tag {
 int igloo_ro_new__return_zero(igloo_ro_t self, const igloo_ro_type_t *type, va_list ap);
 /* ---[ END PRIVATE ]--- */
 
+igloo_ro_t      igloo_RO_TO_TYPE_raw(igloo_ro_t object, const igloo_ro_type_t *type);
 #ifdef IGLOO_CTC_HAVE_TYPE_ATTRIBUTE_TRANSPARENT_UNION
 #define igloo_RO__GETBASE(x)		(((igloo_ro_t)(x)).subtype__igloo_ro_base_t)
 #define igloo_RO_NULL				((igloo_ro_t)(igloo_ro_base_t*)NULL)
 #define igloo_RO_IS_NULL(x)			(igloo_RO__GETBASE((x)) == NULL)
-#define	igloo_RO_TO_TYPE(x,type)    (igloo_RO_IS_VALID((x),type) ? ((igloo_ro_t)(x)).subtype__ ## type : NULL)
+#define	igloo_RO_TO_TYPE(x,type)    (((igloo_ro_t)igloo_RO_TO_TYPE_raw((x), (igloo_ro__type__ ## type))).subtype__ ## type)
 #else
 #define igloo_RO__GETBASE(x)		((igloo_ro_base_t*)(x))
 #define igloo_RO_NULL				NULL
 #define igloo_RO_IS_NULL(x)			((x) == NULL)
-#define igloo_RO_TO_TYPE(x,type)	(igloo_RO_IS_VALID((x),type) ? (type*)(x) : (type*)NULL)
+#define igloo_RO_TO_TYPE(x,type)	((type*)igloo_RO_TO_TYPE_raw((x), (igloo_ro__type__ ## type)))
 #endif
 
 #define igloo_RO_GET_TYPE(x)		(igloo_RO__GETBASE((x)) == NULL ? NULL : igloo_RO__GETBASE((x))->type)
 #define igloo_RO_GET_TYPENAME(x)	(igloo_RO_GET_TYPE((x)) == NULL ? NULL : igloo_RO_GET_TYPE((x))->type_name)
-#define igloo_RO_IS_VALID(x,type)	(!igloo_RO_IS_NULL((x)) && igloo_RO_GET_TYPE((x)) == (igloo_ro__type__ ## type) && igloo_RO__GETBASE((x))->refc)
-#define igloo_RO_HAS_TYPE(x,type)	(!igloo_RO_IS_NULL((x)) && igloo_RO_GET_TYPE((x)) == (type))
+int             igloo_RO_IS_VALID_raw(igloo_ro_t object, const igloo_ro_type_t *type);
+#define igloo_RO_IS_VALID(x,type)	igloo_RO_IS_VALID_raw((x), (igloo_ro__type__ ## type))
+int             igloo_RO_HAS_TYPE_raw(igloo_ro_t object, const igloo_ro_type_t *type);
+#define igloo_RO_HAS_TYPE(x,type)	igloo_RO_HAS_TYPE_raw((x), (type))
 
 /* Create a new refobject
  * The type argument gives the type for the new object,
