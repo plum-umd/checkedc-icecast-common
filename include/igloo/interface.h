@@ -42,7 +42,7 @@ extern "C" {
  */
 typedef int (*igloo_interface_free_t)(igloo_INTERFACE_BASIC_ARGS);
 
-#define igloo_INTERFACE_DESCRIPTION_BASE__VERSION	1
+#define igloo_INTERFACE_DESCRIPTION_BASE__VERSION   1
 
 typedef struct {
     size_t base_length;

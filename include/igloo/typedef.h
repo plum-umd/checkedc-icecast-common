@@ -32,7 +32,7 @@ typedef struct igloo_ro_type_tag igloo_ro_type_t;
 
 #define igloo_RO_TYPE(type)                         type * subtype__ ## type;
 
-#define igloo_RO__CONTROL_VERSION	1
+#define igloo_RO__CONTROL_VERSION   1
 #define igloo_RO__DEFINE_TYPE(type, suffix, ...) \
 static const igloo_ro_type_t igloo_ro__typedef__ ## type = \
 { \

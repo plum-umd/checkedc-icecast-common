@@ -174,9 +174,9 @@ struct igloo_ro_type_tag {
     /* Name of type */
     const char *            type_name;
     /* Callback to be called on final free() */
-    igloo_ro_free_t    	    type_freecb;
+    igloo_ro_free_t         type_freecb;
     /* Callback to be called by igloo_ro_new() */
-    igloo_ro_new_t     	    type_newcb;
+    igloo_ro_new_t          type_newcb;
 
     /* Callback to be called by igloo_ro_clone() */
     igloo_ro_clone_t        type_clonecb;
@@ -188,16 +188,16 @@ struct igloo_ro_type_tag {
     igloo_ro_compare_t      type_comparecb;
 };
 struct igloo_ro_base_tag {
-	/* Type of the object */
+    /* Type of the object */
     const igloo_ro_type_t * type;
-	/* Reference counters */
+    /* Reference counters */
     size_t refc;
     size_t wrefc;
-	/* Mutex for igloo_ro_*(). */
+    /* Mutex for igloo_ro_*(). */
     igloo_mutex_t lock;
-	/* Name of the object. */
+    /* Name of the object. */
     char * name;
-	/* Associated objects */
+    /* Associated objects */
     igloo_ro_t associated;
 };
 int igloo_ro_new__return_zero(igloo_ro_t self, const igloo_ro_type_t *type, va_list ap);
@@ -205,23 +205,23 @@ int igloo_ro_new__return_zero(igloo_ro_t self, const igloo_ro_type_t *type, va_l
 
 igloo_ro_t      igloo_RO_TO_TYPE_raw(igloo_ro_t object, const igloo_ro_type_t *type);
 #ifdef IGLOO_CTC_HAVE_TYPE_ATTRIBUTE_TRANSPARENT_UNION
-#define igloo_RO__GETBASE(x)		(((igloo_ro_t)(x)).subtype__igloo_ro_base_t)
-#define igloo_RO_NULL				((igloo_ro_t)(igloo_ro_base_t*)NULL)
-#define igloo_RO_IS_NULL(x)			(igloo_RO__GETBASE((x)) == NULL)
-#define	igloo_RO_TO_TYPE(x,type)    (((igloo_ro_t)igloo_RO_TO_TYPE_raw((x), (igloo_ro__type__ ## type))).subtype__ ## type)
+#define igloo_RO__GETBASE(x)        (((igloo_ro_t)(x)).subtype__igloo_ro_base_t)
+#define igloo_RO_NULL               ((igloo_ro_t)(igloo_ro_base_t*)NULL)
+#define igloo_RO_IS_NULL(x)         (igloo_RO__GETBASE((x)) == NULL)
+#define igloo_RO_TO_TYPE(x,type)    (((igloo_ro_t)igloo_RO_TO_TYPE_raw((x), (igloo_ro__type__ ## type))).subtype__ ## type)
 #else
-#define igloo_RO__GETBASE(x)		((igloo_ro_base_t*)(x))
-#define igloo_RO_NULL				NULL
-#define igloo_RO_IS_NULL(x)			((x) == NULL)
-#define igloo_RO_TO_TYPE(x,type)	((type*)igloo_RO_TO_TYPE_raw((x), (igloo_ro__type__ ## type)))
+#define igloo_RO__GETBASE(x)        ((igloo_ro_base_t*)(x))
+#define igloo_RO_NULL               NULL
+#define igloo_RO_IS_NULL(x)         ((x) == NULL)
+#define igloo_RO_TO_TYPE(x,type)    ((type*)igloo_RO_TO_TYPE_raw((x), (igloo_ro__type__ ## type)))
 #endif
 
-#define igloo_RO_GET_TYPE(x)		(igloo_RO__GETBASE((x)) == NULL ? NULL : igloo_RO__GETBASE((x))->type)
-#define igloo_RO_GET_TYPENAME(x)	(igloo_RO_GET_TYPE((x)) == NULL ? NULL : igloo_RO_GET_TYPE((x))->type_name)
+#define igloo_RO_GET_TYPE(x)        (igloo_RO__GETBASE((x)) == NULL ? NULL : igloo_RO__GETBASE((x))->type)
+#define igloo_RO_GET_TYPENAME(x)    (igloo_RO_GET_TYPE((x)) == NULL ? NULL : igloo_RO_GET_TYPE((x))->type_name)
 int             igloo_RO_IS_VALID_raw(igloo_ro_t object, const igloo_ro_type_t *type);
-#define igloo_RO_IS_VALID(x,type)	igloo_RO_IS_VALID_raw((x), (igloo_ro__type__ ## type))
+#define igloo_RO_IS_VALID(x,type)   igloo_RO_IS_VALID_raw((x), (igloo_ro__type__ ## type))
 int             igloo_RO_HAS_TYPE_raw(igloo_ro_t object, const igloo_ro_type_t *type);
-#define igloo_RO_HAS_TYPE(x,type)	igloo_RO_HAS_TYPE_raw((x), (type))
+#define igloo_RO_HAS_TYPE(x,type)   igloo_RO_HAS_TYPE_raw((x), (type))
 
 /* Create a new refobject
  * The type argument gives the type for the new object,
@@ -229,12 +229,12 @@ int             igloo_RO_HAS_TYPE_raw(igloo_ro_t object, const igloo_ro_type_t *
  * the associated refobject is given by associated.
  */
 
-igloo_ro_t		igloo_ro_new__raw(const igloo_ro_type_t *type, const char *name, igloo_ro_t associated);
-#define			igloo_ro_new_raw(type, name, associated)  igloo_RO_TO_TYPE(igloo_ro_new__raw((igloo_ro__type__ ## type), (name), (associated)), type)
+igloo_ro_t      igloo_ro_new__raw(const igloo_ro_type_t *type, const char *name, igloo_ro_t associated);
+#define         igloo_ro_new_raw(type, name, associated)  igloo_RO_TO_TYPE(igloo_ro_new__raw((igloo_ro__type__ ## type), (name), (associated)), type)
 
-igloo_ro_t		igloo_ro_new__simple(const igloo_ro_type_t *type, const char *name, igloo_ro_t associated, ...);
-#define			igloo_ro_new(type, ...)  igloo_RO_TO_TYPE(igloo_ro_new__simple((igloo_ro__type__ ## type), NULL, igloo_RO_NULL, ## __VA_ARGS__), type)
-#define			igloo_ro_new_ext(type, name, associated, ...)  igloo_RO_TO_TYPE(igloo_ro_new__simple((igloo_ro__type__ ## type), (name), (associated), ## __VA_ARGS__), type)
+igloo_ro_t      igloo_ro_new__simple(const igloo_ro_type_t *type, const char *name, igloo_ro_t associated, ...);
+#define         igloo_ro_new(type, ...)  igloo_RO_TO_TYPE(igloo_ro_new__simple((igloo_ro__type__ ## type), NULL, igloo_RO_NULL, ## __VA_ARGS__), type)
+#define         igloo_ro_new_ext(type, name, associated, ...)  igloo_RO_TO_TYPE(igloo_ro_new__simple((igloo_ro__type__ ## type), (name), (associated), ## __VA_ARGS__), type)
 
 /* This increases the reference counter of the object */
 int             igloo_ro_ref(igloo_ro_t self);
@@ -251,8 +251,8 @@ int             igloo_ro_weak_unref(igloo_ro_t self);
 const char *    igloo_ro_get_name(igloo_ro_t self);
 
 /* This gets the object's associated object. */
-igloo_ro_t     	igloo_ro_get_associated(igloo_ro_t self);
-int				igloo_ro_set_associated(igloo_ro_t self, igloo_ro_t associated);
+igloo_ro_t      igloo_ro_get_associated(igloo_ro_t self);
+int             igloo_ro_set_associated(igloo_ro_t self, igloo_ro_t associated);
 
 /* Clone the given object returning a copy of it.
  *
