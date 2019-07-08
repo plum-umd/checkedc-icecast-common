@@ -32,7 +32,7 @@ typedef struct igloo_ro_type_tag igloo_ro_type_t;
 
 #define igloo_RO_TYPE(type)                         type * subtype__ ## type;
 
-#define igloo_RO__CONTROL_VERSION	1
+#define igloo_RO__CONTROL_VERSION   1
 #define igloo_RO__DEFINE_TYPE(type, suffix, ...) \
 static const igloo_ro_type_t igloo_ro__typedef__ ## type = \
 { \
@@ -49,6 +49,10 @@ static const igloo_ro_type_t igloo_ro__typedef__ ## type = \
 #define igloo_RO_TYPEDECL_FREE(cb)                  .type_freecb = (cb)
 #define igloo_RO_TYPEDECL_NEW(cb)                   .type_newcb = (cb)
 #define igloo_RO_TYPEDECL_NEW_NOOP()                .type_newcb = igloo_ro_new__return_zero
+#define igloo_RO_TYPEDECL_CLONE(cb)                 .type_clonecb = (cb)
+#define igloo_RO_TYPEDECL_CONVERT(cb)               .type_convertcb = (cb)
+#define igloo_RO_TYPEDECL_STRINGIFY(cb)             .type_stringifycb = (cb)
+#define igloo_RO_TYPEDECL_COMPARE(cb)               .type_comparecb = (cb)
 
 #ifdef __cplusplus
 }
