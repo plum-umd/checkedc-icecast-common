@@ -173,6 +173,10 @@ struct igloo_ro_type_tag {
     size_t                  type_length;
     /* Name of type */
     const char *            type_name;
+
+    /* STILL UNUSED: Parent type */
+    const igloo_ro_type_t * type_parent;
+
     /* Callback to be called on final free() */
     igloo_ro_free_t         type_freecb;
     /* Callback to be called by igloo_ro_new() */
@@ -199,6 +203,8 @@ struct igloo_ro_base_tag {
     char * name;
     /* Associated objects */
     igloo_ro_t associated;
+    /* STILL UNUSED: Instance objects */
+    igloo_ro_t instance;
 };
 int igloo_ro_new__return_zero(igloo_ro_t self, const igloo_ro_type_t *type, va_list ap);
 /* ---[ END PRIVATE ]--- */
