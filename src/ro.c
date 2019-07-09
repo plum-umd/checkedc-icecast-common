@@ -372,6 +372,26 @@ igloo_ro_t      igloo_ro_convert(igloo_ro_t self, const igloo_ro_type_t *type, i
     return ret;
 }
 
+igloo_ro_t igloo_ro_get_interface(igloo_ro_t self, const igloo_ro_type_t *type, const char *name, igloo_ro_t associated)
+{
+    igloo_ro_base_t *base = igloo_RO__GETBASE(self);
+    igloo_ro_t ret = igloo_RO_NULL;
+
+    if (!base || !type)
+        return igloo_RO_NULL;
+
+    igloo_thread_mutex_lock(&(base->lock));
+    if (!base->refc) {
+        igloo_thread_mutex_unlock(&(base->lock));
+        return igloo_RO_NULL;
+    }
+    if (base->type->type_get_interfacecb)
+        ret = base->type->type_get_interfacecb(self, type, name, associated);
+    igloo_thread_mutex_unlock(&(base->lock));
+
+    return ret;
+}
+
 char *          igloo_ro_stringify(igloo_ro_t self)
 {
     igloo_ro_base_t *base = igloo_RO__GETBASE(self);

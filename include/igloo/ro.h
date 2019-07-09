@@ -113,6 +113,24 @@ typedef igloo_ro_t (*igloo_ro_clone_t)(igloo_ro_t self, igloo_ro_cf_t required, 
  */
 typedef igloo_ro_t (*igloo_ro_convert_t)(igloo_ro_t self, const igloo_ro_type_t *type, igloo_ro_cf_t required, igloo_ro_cf_t allowed, const char *name, igloo_ro_t associated);
 
+/* Type used for callback called when a specific interface to the object is requested.
+ *
+ * There are two cases that must be handled by the callback:
+ * 0) The object self is of the same type as this callback is set for and type is pointing to different type that is an interface.
+ * 1) The object self is of any type and type is pointing to the type this callback was set to which is an interface.
+ *
+ * This must not be used for converting to non-interface types. Use igloo_ro_convert() for that.
+ *
+ * Parameters:
+ *  self
+ *      The object to convert.
+ *  type
+ *      The type of the interface requested.
+ *  name, associated
+ *      See igloo_ro_new().
+ */
+typedef igloo_ro_t (*igloo_ro_get_interface_t)(igloo_ro_t self, const igloo_ro_type_t *type, const char *name, igloo_ro_t associated);
+
 /* Type used for callback called when the object needs to be converted to a string.
  *
  * This is used mostly for debugging or preseting the object to the user.
@@ -165,31 +183,33 @@ typedef igloo_ro_cr_t (*igloo_ro_compare_t)(igloo_ro_t a, igloo_ro_t b);
  */
 struct igloo_ro_type_tag {
     /* Size of this control structure */
-    size_t                  control_length;
+    size_t                      control_length;
     /* ABI version of this structure */
-    int                     control_version;
+    int                         control_version;
 
     /* Total length of the objects to be created */
-    size_t                  type_length;
+    size_t                      type_length;
     /* Name of type */
-    const char *            type_name;
+    const char *                type_name;
 
     /* STILL UNUSED: Parent type */
-    const igloo_ro_type_t * type_parent;
+    const igloo_ro_type_t *     type_parent;
 
     /* Callback to be called on final free() */
-    igloo_ro_free_t         type_freecb;
+    igloo_ro_free_t             type_freecb;
     /* Callback to be called by igloo_ro_new() */
-    igloo_ro_new_t          type_newcb;
+    igloo_ro_new_t              type_newcb;
 
     /* Callback to be called by igloo_ro_clone() */
-    igloo_ro_clone_t        type_clonecb;
+    igloo_ro_clone_t            type_clonecb;
     /* Callback to be called by igloo_ro_convert() */
-    igloo_ro_convert_t      type_convertcb;
+    igloo_ro_convert_t          type_convertcb;
+    /* Callback to be called by igloo_ro_get_interface() */
+    igloo_ro_get_interface_t    type_get_interfacecb;
     /* Callback to be called by igloo_ro_stringify() */
-    igloo_ro_stringify_t    type_stringifycb;
+    igloo_ro_stringify_t        type_stringifycb;
     /* Callback to be called by igloo_ro_compare() */
-    igloo_ro_compare_t      type_comparecb;
+    igloo_ro_compare_t          type_comparecb;
 };
 struct igloo_ro_base_tag {
     /* Type of the object */
@@ -300,6 +320,25 @@ igloo_ro_t      igloo_ro_clone(igloo_ro_t self, igloo_ro_cf_t required, igloo_ro
  *      See igloo_ro_new().
  */
 igloo_ro_t      igloo_ro_convert(igloo_ro_t self, const igloo_ro_type_t *type, igloo_ro_cf_t required, igloo_ro_cf_t allowed, const char *name, igloo_ro_t associated);
+
+/* Request a specific interface from the object.
+ *
+ * This must not be used to convert the object. This can only be used for requesting a specific interface.
+ *
+ * The object may return the same object for the same requested interface multiple times.
+ * However each time the same object is returned a new reference to it is returned.
+ *
+ * Parameters:
+ *  self
+ *      The object to copy and convert.
+ *  type
+ *      The interface requested.
+ *  name, associated
+ *      See igloo_ro_new().
+ * Returns:
+ *  An object that represents the given interface or igloo_RO_NULL.
+ */
+igloo_ro_t igloo_ro_get_interface(igloo_ro_t self, const igloo_ro_type_t *type, const char *name, igloo_ro_t associated);
 
 /* Convert a object to a string.
  * This is used for debugging and presenting to the user.

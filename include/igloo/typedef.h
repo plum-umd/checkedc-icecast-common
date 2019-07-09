@@ -51,6 +51,7 @@ static const igloo_ro_type_t igloo_ro__typedef__ ## type = \
 #define igloo_RO_TYPEDECL_NEW_NOOP()                .type_newcb = igloo_ro_new__return_zero
 #define igloo_RO_TYPEDECL_CLONE(cb)                 .type_clonecb = (cb)
 #define igloo_RO_TYPEDECL_CONVERT(cb)               .type_convertcb = (cb)
+#define igloo_RO_TYPEDECL_GET_INTERFACE(cb)         .type_get_interfacecb = (cb)
 #define igloo_RO_TYPEDECL_STRINGIFY(cb)             .type_stringifycb = (cb)
 #define igloo_RO_TYPEDECL_COMPARE(cb)               .type_comparecb = (cb)
 
