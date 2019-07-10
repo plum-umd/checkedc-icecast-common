@@ -135,29 +135,46 @@ static const char * __level2str(igloo_loglevel_t level)
     return "<<<unknowm log level>>>";
 }
 
+typedef enum {
+    igloo_FST_FULL,
+    igloo_FST_OLD,
+    igloo_FST_NORMAL = igloo_FST_OLD
+} igloo_logmsg_formarter_subtype_t;
+
 static igloo_filter_result_t __handle(igloo_INTERFACE_BASIC_ARGS, igloo_ro_t object)
 {
     igloo_logmsg_t *msg = igloo_RO_TO_TYPE(object, igloo_logmsg_t);
+    igloo_logmsg_formarter_subtype_t sf = *(igloo_logmsg_formarter_subtype_t*)*backend_userdata;
     const char *level = NULL;
     time_t now;
-    char pre[256+LOG_MAXLINELEN];
+    char pre[256+LOG_MAXLINELEN] = "";
     int datelen;
     char flags[3] = "  ";
 
     if (!msg)
         return igloo_FILTER_RESULT_DROP;
 
-    if (msg->options & igloo_LOGMSG_OPT_DEVEL)
-        flags[0] = 'D';
-
-    if (msg->options & igloo_LOGMSG_OPT_ASKACK)
-        flags[1] = 'A';
-
     level = __level2str(msg->level);
 
-    now = msg->ts.tv_sec;
-    datelen = strftime(pre, sizeof(pre), "[%Y-%m-%d  %H:%M:%S]", localtime(&now)); 
-    snprintf(pre+datelen, sizeof(pre)-datelen, " %s [%s] %s/%s(%s:%zi) %s\n", level, flags, msg->cat, msg->func, msg->codefile, msg->codeline, msg->string);
+    switch (sf) {
+        case igloo_FST_FULL:
+            if (msg->options & igloo_LOGMSG_OPT_DEVEL)
+                flags[0] = 'D';
+
+            if (msg->options & igloo_LOGMSG_OPT_ASKACK)
+                flags[1] = 'A';
+
+            now = msg->ts.tv_sec;
+            datelen = strftime(pre, sizeof(pre), "[%Y-%m-%d  %H:%M:%S UTC]", gmtime(&now));
+            snprintf(pre+datelen, sizeof(pre)-datelen, " (%s) %s [%s] %s/%s(%s:%zi) %s\n", (msg->msgid ? msg->msgid : ""), level, flags, msg->cat, msg->func, msg->codefile, msg->codeline, msg->string);
+        break;
+        case igloo_FST_OLD:
+            now = msg->ts.tv_sec;
+            datelen = strftime(pre, sizeof(pre), "[%Y-%m-%d  %H:%M:%S]", localtime(&now));
+            snprintf(pre+datelen, sizeof(pre)-datelen, " %s %s/%s %s\n", level, msg->cat, msg->func, msg->string);
+        break;
+    }
+
     igloo_io_write(igloo_RO_TO_TYPE(*backend_object, igloo_io_t), pre, strlen(pre));
 
     return igloo_FILTER_RESULT_PASS;
@@ -168,10 +185,6 @@ static const igloo_objecthandler_ifdesc_t igloo_logmsg_formarter_ifdesc = {
     .is_thread_safe = 1,
     .handle = __handle
 };
-
-typedef enum {
-    igloo_FST_NORMAL
-} igloo_logmsg_formarter_subtype_t;
 
 igloo_objecthandler_t   * igloo_logmsg_formarter(igloo_ro_t backend, const char *subformat, const char *name, igloo_ro_t associated)
 {
@@ -184,13 +197,18 @@ igloo_objecthandler_t   * igloo_logmsg_formarter(igloo_ro_t backend, const char 
     if (!subformat || strcmp(subformat, "default") == 0)
         subformat = "normal";
 
-    if (strcmp(subformat, "normal") == 0) {
-        sf = malloc(sizeof(*sf));
-        if (!sf)
-            return NULL;
+    sf = malloc(sizeof(*sf));
+    if (!sf)
+        return NULL;
 
+    if (strcmp(subformat, "normal") == 0) {
         *sf = igloo_FST_NORMAL;
+    } else if (strcmp(subformat, "full") == 0) {
+        *sf = igloo_FST_FULL;
+    } else if (strcmp(subformat, "old") == 0) {
+        *sf = igloo_FST_OLD;
     } else {
+        free(sf);
         return NULL;
     }
 
