@@ -117,9 +117,60 @@ igloo_logmsg_t * igloo_logmsg_new(const char *name, igloo_ro_t associated,
 }
 
 
-int igloo_logmsg_get_context(igloo_logmsg_t *msg, const char **msgid, const char **cat, const char **func, const char **codefile, const ssize_t *codeline, struct timespec **ts);
-int igloo_logmsg_get_message(igloo_logmsg_t *msg, igloo_loglevel_t *level, const char **string);
-int igloo_logmsg_get_extra(igloo_logmsg_t *msg, igloo_logmsg_opt_t *options, igloo_list_t **list);
+#define __SETSTRING(x) \
+    if ((x)) { \
+        *(x) = msg->x; \
+    }
+
+int igloo_logmsg_get_context(igloo_logmsg_t *msg, const char **msgid, const char **cat, const char **func, const char **codefile, ssize_t *codeline, struct timespec *ts)
+{
+    if (!msg)
+        return -1;
+
+    __SETSTRING(msgid);
+    __SETSTRING(cat);
+    __SETSTRING(func);
+    __SETSTRING(codefile);
+    __SETSTRING(codeline);
+    __SETSTRING(ts);
+
+    return 0;
+}
+
+int igloo_logmsg_get_message(igloo_logmsg_t *msg, igloo_loglevel_t *level, const char **string)
+{
+    if (!msg)
+        return -1;
+
+    if (level)
+        *level = msg->level;
+
+    __SETSTRING(string);
+
+    return 0;
+}
+
+int igloo_logmsg_get_extra(igloo_logmsg_t *msg, igloo_logmsg_opt_t *options, igloo_list_t **referenced)
+{
+    if (!msg)
+        return -1;
+
+    if (options)
+        *options = msg->options;
+
+    if (referenced) {
+        if (msg->referenced) {
+            if (igloo_ro_ref(msg->referenced) != 0)
+                return -1;
+
+            *referenced = msg->referenced;
+        } else {
+            *referenced = NULL;
+        }
+    }
+
+    return 0;
+}
 
 static const char * __level2str(igloo_loglevel_t level)
 {
