@@ -183,7 +183,7 @@ static const char * __level2str(igloo_loglevel_t level)
         case IGLOO_LOGLEVEL_DEBUG: return "DBUG"; break;
     }
 
-    return "<<<unknowm log level>>>";
+    return "<<<unknown log level>>>";
 }
 
 typedef enum {
