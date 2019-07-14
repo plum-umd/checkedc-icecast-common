@@ -35,11 +35,66 @@ static void test_create_unref(void)
     ctest_test("un-referenced", igloo_ro_unref(filter) == 0);
 }
 
+static void test_logmsg(void)
+{
+    static const struct timespec tv_in = {.tv_sec = -4242134, .tv_nsec = 1234789};
+    igloo_logmsg_t *msg;
+    const char *msgid_out, *cat_out, *func_out, *codefile_out, *string_out;
+    ssize_t codeline_out;
+    struct timespec tv_out;
+    igloo_loglevel_t level_out;
+    igloo_logmsg_opt_t options_out;
+    igloo_list_t *referenced_out;
+    int ret;
+
+    msg = igloo_logmsg_new("name", igloo_RO_NULL, "msgid", "cat", "func", "codefile", 13374242, &tv_in, igloo_LOGLEVEL_INFO, igloo_LOGMSG_OPT_ASKACK, NULL, "test %i %s", 5, "msg");
+    ctest_test("logmsg created", !igloo_RO_IS_NULL(msg));
+
+    ctest_test("got context", (ret = igloo_logmsg_get_context(msg, &msgid_out, &cat_out, &func_out, &codefile_out, &codeline_out, &tv_out)) == 0);
+    if (ret == 0) {
+        ctest_test("got msgid", msgid_out != NULL && strcmp(msgid_out, "msgid") == 0);
+        ctest_test("got cat", cat_out != NULL && strcmp(cat_out, "cat") == 0);
+        ctest_test("got func", func_out != NULL && strcmp(func_out, "func") == 0);
+        ctest_test("got codefile", codefile_out != NULL && strcmp(codefile_out, "codefile") == 0);
+        ctest_test("got codeline", codeline_out == 13374242);
+        ctest_test("got ts", tv_out.tv_sec == -4242134 && tv_out.tv_nsec == 1234789);
+    } else {
+        ctest_test("got msgid", 0);
+        ctest_test("got cat", 0);
+        ctest_test("got func", 0);
+        ctest_test("got codefile", 0);
+        ctest_test("got codeline", 0);
+        ctest_test("got ts", 0);
+    }
+
+    ctest_test("got message", (ret = igloo_logmsg_get_message(msg, &level_out, &string_out)) == 0);
+    if (ret == 0) {
+        ctest_test("got level", level_out == igloo_LOGLEVEL_INFO);
+        ctest_test("got string", string_out != NULL && strcmp(string_out, "test 5 msg") == 0);
+    } else {
+        ctest_test("got level", 0);
+        ctest_test("got string", 0);
+    }
+
+    ctest_test("got extra", (ret = igloo_logmsg_get_extra(msg, &options_out, &referenced_out)) == 0);
+    if (ret == 0) {
+        ctest_test("got options", options_out == igloo_LOGMSG_OPT_ASKACK);
+        ctest_test("got referenced", referenced_out == NULL);
+    } else {
+        ctest_test("got options", 0);
+        ctest_test("got referenced", 0);
+    }
+
+    ctest_test("un-referenced", igloo_ro_unref(msg) == 0);
+}
+
 int main (void)
 {
     ctest_init();
 
     test_create_unref();
+
+    test_logmsg();
 
     ctest_fin();
 
