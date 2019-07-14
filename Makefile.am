@@ -25,11 +25,13 @@ pkginclude_HEADERS = \
     include/igloo/stdio.h \
     include/igloo/filter.h \
     include/igloo/objecthandler.h \
+    include/igloo/logmsg.h \
     include/igloo/buffer.h \
     include/igloo/list.h \
     include/igloo/reportxml.h
 
 libigloo_la_SOURCES = \
+    src/private.c \
     src/libigloo.c \
     src/interface.c \
     src/ro.c \
@@ -37,6 +39,7 @@ libigloo_la_SOURCES = \
     src/stdio.c \
     src/filter.c \
     src/objecthandler.c \
+    src/logmsg.c \
     src/buffer.c \
     src/list.c \
     src/reportxml.c

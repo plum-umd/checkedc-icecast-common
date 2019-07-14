@@ -82,7 +82,7 @@ typedef unsigned long int igloo_io_opflag_t;
 /* Operate on metadata. */
 #define igloo_IO_OPFLAG_METADATA        ((igloo_io_opflag_t)0x0002)
 /* Operate on data and metadata. */
-#define igloo_IO_OPFLAG_FULL            (igloo_IO_OPFLAG_DATAONLY|igloo_IO_OPFLAG_METADATAONLY)
+#define igloo_IO_OPFLAG_FULL            (igloo_IO_OPFLAG_DATA|igloo_IO_OPFLAG_METADATA)
 /* Instructs the operation that it should ignore the output state of the object.
  * This may improve performance as buffer flushes may be skipped.
  * However with this set any external software interacting with this object

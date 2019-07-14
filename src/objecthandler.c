@@ -31,6 +31,9 @@ static void __free(igloo_ro_t self)
     igloo_objecthandler_t *handler = igloo_RO_TO_TYPE(self, igloo_objecthandler_t);
 
     igloo_thread_rwlock_wlock(&(handler->rwlock));
+    igloo_ro_unref(handler->filter_a);
+    igloo_ro_unref(handler->filter_b);
+    igloo_ro_unref(handler->filter_list);
     igloo_thread_rwlock_unlock(&(handler->rwlock));
     igloo_thread_rwlock_destroy(&(handler->rwlock));
 
