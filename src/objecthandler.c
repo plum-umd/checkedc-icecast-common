@@ -164,3 +164,49 @@ int igloo_objecthandler_push_filter(igloo_objecthandler_t *handler, igloo_filter
 
     return ret;
 }
+
+int igloo_objecthandler_flush(igloo_objecthandler_t *handler)
+{
+    int ret = 0;
+
+    if (!igloo_RO_IS_VALID(handler, igloo_objecthandler_t))
+        return -1;
+
+    if (!handler->ifdesc->flush)
+        return 0;
+
+    if (handler->ifdesc->is_thread_safe) {
+        igloo_thread_rwlock_wlock(&(handler->rwlock));
+    } else {
+        igloo_thread_rwlock_rlock(&(handler->rwlock));
+    }
+
+    ret = handler->ifdesc->flush(igloo_INTERFACE_BASIC_CALL(handler));
+
+    igloo_thread_rwlock_unlock(&(handler->rwlock));
+
+    return ret;
+}
+
+int igloo_objecthandler_set_backend(igloo_objecthandler_t *handler, igloo_ro_t backend)
+{
+    int ret = 0;
+
+    if (!igloo_RO_IS_VALID(handler, igloo_objecthandler_t))
+        return -1;
+
+    if (!handler->ifdesc->set_backend)
+        return -1;
+
+    igloo_thread_rwlock_wlock(&(handler->rwlock));
+
+    if (handler->ifdesc->flush)
+        ret = handler->ifdesc->flush(igloo_INTERFACE_BASIC_CALL(handler));
+
+    if (ret == 0)
+        ret = handler->ifdesc->set_backend(igloo_INTERFACE_BASIC_CALL(handler), backend);
+
+    igloo_thread_rwlock_unlock(&(handler->rwlock));
+
+    return ret;
+}

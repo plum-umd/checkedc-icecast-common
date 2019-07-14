@@ -46,6 +46,18 @@ typedef struct {
 
     /* Perform the actual test on the object. */
     igloo_filter_result_t (*handle)(igloo_INTERFACE_BASIC_ARGS, igloo_ro_t object);
+
+    /* Flush all data left in the handler.
+     * It should also flush the backend if the backend can be flushed.
+     */
+    int (*flush)(igloo_INTERFACE_BASIC_ARGS);
+    /* Detach old and attach new backend if operation is possible.
+     * This is always done locked. So this function must not be thread safe.
+     * igloo_objecthandler_flush() is automatically called before this
+     * and is also protected by the lock so that there is no race between
+     * the flush and the backend update.
+     */
+    int (*set_backend)(igloo_INTERFACE_BASIC_ARGS, igloo_ro_t backend);
 } igloo_objecthandler_ifdesc_t;
 
 /* This creates a new objecthandler from a interface description and state.
@@ -71,6 +83,27 @@ igloo_objecthandler_t * igloo_objecthandler_new(const igloo_objecthandler_ifdesc
  *  Whether the object was accepted by the handler or not.
  */
 igloo_filter_result_t igloo_objecthandler_handle(igloo_objecthandler_t *handler, igloo_ro_t object);
+
+/* Flushes the object handler. All data still in queue will be
+ * written to the backend.
+ * Parameters:
+ *  handler
+ *      The handler to use.
+ */
+int igloo_objecthandler_flush(igloo_objecthandler_t *handler);
+
+/* Detaches the old and attaches a new backend.
+ * This is useful for e.g. reopening files.
+ *
+ * This also calls igloo_objecthandler_flush().
+ *
+ * Parameters:
+ *  handler
+ *      The handler to use.
+ *  backend
+ *      The new backend to use.
+ */
+int igloo_objecthandler_set_backend(igloo_objecthandler_t *handler, igloo_ro_t backend);
 
 /* This adds a filter to the handler.
  * Parameters:
