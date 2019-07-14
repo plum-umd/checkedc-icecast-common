@@ -44,7 +44,7 @@ typedef struct {
     /* Whether the this backend is thread safe. */
     int is_thread_safe;
 
-    /* Perform the actual test on the object. */
+    /* Perform the actual handling of the object. */
     igloo_filter_result_t (*handle)(igloo_INTERFACE_BASIC_ARGS, igloo_ro_t object);
 
     /* Flush all data left in the handler.
