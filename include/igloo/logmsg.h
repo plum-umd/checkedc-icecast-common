@@ -47,17 +47,17 @@ igloo_RO_FORWARD_TYPE(igloo_logmsg_t);
 /* Log level for log messages */
 typedef enum {
     /* Used to report errors with function calls. */
-    IGLOO_LOGLEVEL__ERROR    = -1,
+    igloo_LOGLEVEL__ERROR    = -1,
     /* Unset log level. */
-    IGLOO_LOGLEVEL__NONE     =  0,
+    igloo_LOGLEVEL__NONE     =  0,
     /* Logmsg reports an error. */
-    IGLOO_LOGLEVEL_ERROR,
+    igloo_LOGLEVEL_ERROR,
     /* Logmsg reports a warning. */
-    IGLOO_LOGLEVEL_WARN,
+    igloo_LOGLEVEL_WARN,
     /* Logmsg is of information level. */
-    IGLOO_LOGLEVEL_INFO,
+    igloo_LOGLEVEL_INFO,
     /* Logmsg is for debugging only. */
-    IGLOO_LOGLEVEL_DEBUG
+    igloo_LOGLEVEL_DEBUG
 } igloo_loglevel_t;
 
 /* Type for logmsg options.

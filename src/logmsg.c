@@ -175,12 +175,12 @@ int igloo_logmsg_get_extra(igloo_logmsg_t *msg, igloo_logmsg_opt_t *options, igl
 static const char * __level2str(igloo_loglevel_t level)
 {
     switch (level) {
-        case IGLOO_LOGLEVEL__ERROR: return "<<<ERROR>>>"; break;
-        case IGLOO_LOGLEVEL__NONE: return "NONE"; break;
-        case IGLOO_LOGLEVEL_ERROR: return "EROR"; break;
-        case IGLOO_LOGLEVEL_WARN: return "WARN"; break;
-        case IGLOO_LOGLEVEL_INFO: return "INFO"; break;
-        case IGLOO_LOGLEVEL_DEBUG: return "DBUG"; break;
+        case igloo_LOGLEVEL__ERROR: return "<<<ERROR>>>"; break;
+        case igloo_LOGLEVEL__NONE: return "NONE"; break;
+        case igloo_LOGLEVEL_ERROR: return "EROR"; break;
+        case igloo_LOGLEVEL_WARN: return "WARN"; break;
+        case igloo_LOGLEVEL_INFO: return "INFO"; break;
+        case igloo_LOGLEVEL_DEBUG: return "DBUG"; break;
     }
 
     return "<<<unknown log level>>>";
