@@ -231,19 +231,48 @@ static igloo_filter_result_t __handle(igloo_INTERFACE_BASIC_ARGS, igloo_ro_t obj
     return igloo_FILTER_RESULT_PASS;
 }
 
+static int __flush(igloo_INTERFACE_BASIC_ARGS)
+{
+    igloo_io_t *io = igloo_RO_TO_TYPE(*backend_object, igloo_io_t);
+
+    if (!io)
+        return 0;
+
+    return igloo_io_flush(io, igloo_IO_OPFLAG_DEFAULTS|igloo_IO_OPFLAG_FULL);
+}
+
+static int __set_backend(igloo_INTERFACE_BASIC_ARGS, igloo_ro_t backend)
+{
+    int ret;
+
+    if (!igloo_RO_IS_NULL(backend)) {
+        if (!igloo_RO_IS_VALID(backend, igloo_io_t))
+            return -1;
+
+        ret = igloo_ro_ref(backend);
+        if (ret != 0)
+            return ret;
+    }
+
+    igloo_ro_unref(*backend_object);
+    *backend_object = backend;
+
+    return 0;
+}
+
+
 static const igloo_objecthandler_ifdesc_t igloo_logmsg_formarter_ifdesc = {
     igloo_INTERFACE_DESCRIPTION_BASE(igloo_objecthandler_ifdesc_t),
     .is_thread_safe = 1,
-    .handle = __handle
+    .handle = __handle,
+    .flush = __flush,
+    .set_backend = __set_backend
 };
 
 igloo_objecthandler_t   * igloo_logmsg_formarter(igloo_ro_t backend, const char *subformat, const char *name, igloo_ro_t associated)
 {
     igloo_logmsg_formarter_subtype_t *sf = NULL;
     igloo_objecthandler_t *objecthandler;
-
-    if (!igloo_RO_IS_VALID(backend, igloo_io_t))
-        return NULL;
 
     if (!subformat || strcmp(subformat, "default") == 0)
         subformat = "normal";
@@ -263,9 +292,14 @@ igloo_objecthandler_t   * igloo_logmsg_formarter(igloo_ro_t backend, const char 
         return NULL;
     }
 
-    objecthandler = igloo_objecthandler_new(&igloo_logmsg_formarter_ifdesc, backend, sf, name, associated);
+    objecthandler = igloo_objecthandler_new(&igloo_logmsg_formarter_ifdesc, NULL, sf, name, associated);
     if (!objecthandler) {
         free(sf);
+    }
+
+    if (igloo_objecthandler_set_backend(objecthandler, backend) != 0) {
+        igloo_ro_unref(objecthandler);
+        return NULL;
     }
 
     return objecthandler;
