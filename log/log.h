@@ -29,7 +29,7 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#include <stdio.h>
+#include <stdio_checked.h>
 
 #define LOG_EINSANE -1
 #define LOG_ENOMORELOGS -2
