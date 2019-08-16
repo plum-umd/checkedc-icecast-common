@@ -89,7 +89,7 @@ static int _isip(const char *what)
 
 
 #if defined (HAVE_GETNAMEINFO) && defined (HAVE_GETADDRINFO)
-char *resolver_getname(const char *ip, char *buff, int len)
+char * resolver_getname(const char *ip, char *buff, int len)
 {
     struct addrinfo *head = NULL, hints;
     char *ret = NULL;
@@ -120,7 +120,7 @@ char *resolver_getname(const char *ip, char *buff, int len)
 }
 
 
-char *resolver_getip(const char *name, char *buff, int len)
+char * resolver_getip(const char *name, char *buff, int len)
 {
     struct addrinfo *head, hints;
     char *ret = NULL;

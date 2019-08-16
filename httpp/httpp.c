@@ -46,18 +46,18 @@
 /* internal functions */
 
 /* misc */
-static char *_lowercase(char *str);
+static char * _lowercase(char *str);
 
 /* for avl trees */
-static int _compare_vars(void *compare_arg, void *a, void *b);
+static int _compare_vars(void* compare_arg, void *a, void *b);
 static int _free_vars(void *key);
 
 /* For avl tree manipulation */
-static void parse_query(avl_tree *tree, const char *query, size_t len);
-static const char *_httpp_get_param(avl_tree *tree, const char *name);
-static void _httpp_set_param_nocopy(avl_tree *tree, char *name, char *value, int replace);
-static void _httpp_set_param(avl_tree *tree, const char *name, const char *value);
-static http_var_t *_httpp_get_param_var(avl_tree *tree, const char *name);
+static void parse_query(_Ptr<avl_tree> tree, const char *query, size_t len);
+static const char * _httpp_get_param(_Ptr<avl_tree> tree, const char *name);
+static void _httpp_set_param_nocopy(_Ptr<avl_tree> tree, char *name, char *value, int replace);
+static void _httpp_set_param(_Ptr<avl_tree> tree, _Nt_array_ptr<const char> name, const char *value);
+static http_var_t *_httpp_get_param_var(_Ptr<avl_tree> tree, const char *name) : itype(_Ptr<http_var_t> ) ;
 
 httpp_request_info_t httpp_request_info(httpp_request_type_e req)
 {
@@ -130,9 +130,9 @@ http_parser_t *httpp_create_parser(void)
     return parser;
 }
 
-void httpp_initialize(http_parser_t *parser, http_varlist_t *defaults)
+void httpp_initialize(_Ptr<http_parser_t> parser, _Ptr<http_varlist_t> defaults)
 {
-    http_varlist_t *list;
+    _Ptr<http_varlist_t> list = NULL;
 
     /* now insert the default variables */
     list = defaults;
@@ -177,7 +177,7 @@ static int split_headers(char *data, unsigned long len, char **line)
     return lines;
 }
 
-static void parse_headers(http_parser_t *parser, char **line, int lines)
+static void parse_headers(_Ptr<http_parser_t> parser, char **line, int lines)
 {
     int i, l;
     int whitespace, slen;
@@ -216,7 +216,7 @@ static void parse_headers(http_parser_t *parser, char **line, int lines)
     }
 }
 
-int httpp_parse_response(http_parser_t *parser, const char *http_data, unsigned long len, const char *uri)
+int httpp_parse_response(_Ptr<http_parser_t> parser, _Ptr<const char> http_data, unsigned long len, const char *uri)
 {
     char *data;
     char *line[MAX_HEADERS];
@@ -276,7 +276,7 @@ int httpp_parse_response(http_parser_t *parser, const char *http_data, unsigned 
     return 1;
 }
 
-int httpp_parse_postdata(http_parser_t *parser, const char *body_data, size_t len)
+int httpp_parse_postdata(_Ptr<http_parser_t> parser, const char *body_data, size_t len)
 {
     const char *header = httpp_getvar(parser, "content-type");
 
@@ -301,7 +301,7 @@ static int hex(char c)
         return -1;
 }
 
-static char *url_unescape(const char *src, size_t len)
+static _Ptr<char> url_unescape(const char *src, size_t len)
 {
     unsigned char *decoded;
     size_t i;
@@ -350,12 +350,12 @@ static char *url_unescape(const char *src, size_t len)
     return (char *)decoded;
 }
 
-static void parse_query_element(avl_tree *tree, const char *start, const char *mid, const char *end)
+static void parse_query_element(_Ptr<avl_tree> tree, const char *start, const char *mid, const char *end)
 {
     size_t keylen;
     char *key;
     size_t valuelen;
-    char *value;
+    _Ptr<char> value = NULL;
 
     if (start >= end)
         return;
@@ -379,7 +379,7 @@ static void parse_query_element(avl_tree *tree, const char *start, const char *m
     _httpp_set_param_nocopy(tree, key, value, 0);
 }
 
-static void parse_query(avl_tree *tree, const char *query, size_t len)
+static void parse_query(_Ptr<avl_tree> tree, const char *query, size_t len)
 {
     const char *start = query;
     const char *mid = NULL;
@@ -404,7 +404,7 @@ static void parse_query(avl_tree *tree, const char *query, size_t len)
     parse_query_element(tree, start, mid, &(query[i]));
 }
 
-int httpp_parse(http_parser_t *parser, const char *http_data, unsigned long len)
+int httpp_parse(_Ptr<http_parser_t> parser, _Ptr<const char> http_data, unsigned long len)
 {
     char *data, *tmp;
     char *line[MAX_HEADERS]; /* limited to 32 lines, should be more than enough */
@@ -551,7 +551,7 @@ int httpp_parse(http_parser_t *parser, const char *http_data, unsigned long len)
     return 1;
 }
 
-void httpp_deletevar(http_parser_t *parser, const char *name)
+void httpp_deletevar(_Ptr<http_parser_t> parser, const char *name)
 {
     http_var_t var;
 
@@ -564,7 +564,7 @@ void httpp_deletevar(http_parser_t *parser, const char *name)
     avl_delete(parser->vars, (void *)&var, _free_vars);
 }
 
-void httpp_setvar(http_parser_t *parser, const char *name, const char *value)
+void httpp_setvar(_Ptr<http_parser_t> parser, const char *name : itype(_Nt_array_ptr<const char> ) , const char *value : itype(_Nt_array_ptr<const char> ) )
 {
     http_var_t *var;
 
@@ -592,11 +592,11 @@ void httpp_setvar(http_parser_t *parser, const char *name, const char *value)
     }
 }
 
-const char *httpp_getvar(http_parser_t *parser, const char *name)
+const char * httpp_getvar(_Ptr<http_parser_t> parser, const char *name)
 {
     http_var_t var;
-    http_var_t *found;
-    void *fp;
+    _Ptr<http_var_t> found = NULL;
+    void* fp = NULL;
 
     if (parser == NULL || name == NULL)
         return NULL;
@@ -614,7 +614,7 @@ const char *httpp_getvar(http_parser_t *parser, const char *name)
     }
 }
 
-static void _httpp_set_param_nocopy(avl_tree *tree, char *name, char *value, int replace)
+static void _httpp_set_param_nocopy(_Ptr<avl_tree> tree, char *name, char *value, int replace)
 {
     http_var_t *var, *found;
     char **n;
@@ -659,7 +659,7 @@ static void _httpp_set_param_nocopy(avl_tree *tree, char *name, char *value, int
     }
 }
 
-static void _httpp_set_param(avl_tree *tree, const char *name, const char *value)
+static void _httpp_set_param(_Ptr<avl_tree> tree, _Nt_array_ptr<const char> name, const char *value)
 {
     if (name == NULL || value == NULL)
         return;
@@ -667,11 +667,11 @@ static void _httpp_set_param(avl_tree *tree, const char *name, const char *value
     _httpp_set_param_nocopy(tree, strdup(name), url_unescape(value, strlen(value)), 1);
 }
 
-static http_var_t *_httpp_get_param_var(avl_tree *tree, const char *name)
+static http_var_t *_httpp_get_param_var(_Ptr<avl_tree> tree, const char *name) : itype(_Ptr<http_var_t> ) 
 {
     http_var_t var;
-    http_var_t *found;
-    void *fp;
+    _Ptr<http_var_t> found = NULL;
+    void* fp = NULL;
 
     fp = &found;
     memset(&var, 0, sizeof(var));
@@ -682,7 +682,7 @@ static http_var_t *_httpp_get_param_var(avl_tree *tree, const char *name)
     else
         return NULL;
 }
-static const char *_httpp_get_param(avl_tree *tree, const char *name)
+static const char * _httpp_get_param(_Ptr<avl_tree> tree, const char *name)
 {
     http_var_t *res = _httpp_get_param_var(tree, name);
 
@@ -695,27 +695,27 @@ static const char *_httpp_get_param(avl_tree *tree, const char *name)
     return res->value[0];
 }
 
-void httpp_set_query_param(http_parser_t *parser, const char *name, const char *value)
+void httpp_set_query_param(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> name, const char *value)
 {
     return _httpp_set_param(parser->queryvars, name, value);
 }
 
-const char *httpp_get_query_param(http_parser_t *parser, const char *name)
+const char * httpp_get_query_param(_Ptr<http_parser_t> parser, _Ptr<const char> name)
 {
     return _httpp_get_param(parser->queryvars, name);
 }
 
-void httpp_set_post_param(http_parser_t *parser, const char *name, const char *value)
+void httpp_set_post_param(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> name, const char *value)
 {
     return _httpp_set_param(parser->postvars, name, value);
 }
 
-const char *httpp_get_post_param(http_parser_t *parser, const char *name)
+const char * httpp_get_post_param(_Ptr<http_parser_t> parser, _Ptr<const char> name)
 {
     return _httpp_get_param(parser->postvars, name);
 }
 
-const http_var_t *httpp_get_param_var(http_parser_t *parser, const char *name)
+const http_var_t * httpp_get_param_var(_Ptr<http_parser_t> parser, const char *name)
 {
     http_var_t *ret = _httpp_get_param_var(parser->postvars, name);
 
@@ -725,9 +725,9 @@ const http_var_t *httpp_get_param_var(http_parser_t *parser, const char *name)
     return _httpp_get_param_var(parser->queryvars, name);
 }
 
-const http_var_t *httpp_get_any_var(http_parser_t *parser, httpp_ns_t ns, const char *name)
+const http_var_t * httpp_get_any_var(_Ptr<http_parser_t> parser, httpp_ns_t ns, const char *name)
 {
-    avl_tree *tree = NULL;
+    _Ptr<avl_tree> tree =  NULL;
 
     if (!parser || !name)
         return NULL;
@@ -757,10 +757,10 @@ const http_var_t *httpp_get_any_var(http_parser_t *parser, httpp_ns_t ns, const 
     return _httpp_get_param_var(tree, name);
 }
 
-char ** httpp_get_any_key(http_parser_t *parser, httpp_ns_t ns)
+char ** httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns)
 {
-    avl_tree *tree = NULL;
-    avl_node *avlnode;
+    _Ptr<avl_tree> tree =  NULL;
+    _Ptr<avl_node> avlnode = NULL;
     char **ret;
     size_t len;
     size_t pos = 0;
@@ -791,7 +791,7 @@ char ** httpp_get_any_key(http_parser_t *parser, httpp_ns_t ns)
     len = 8;
 
     for (avlnode = avl_get_first(tree); avlnode; avlnode = avl_get_next(avlnode)) {
-        http_var_t *var = avlnode->key;
+        _Ptr<http_var_t> var =  avlnode->key;
 
         if (ns == HTTPP_NS_VAR) {
             if (var->name[0] != '_' || var->name[1] != '_') {
@@ -826,9 +826,9 @@ char ** httpp_get_any_key(http_parser_t *parser, httpp_ns_t ns)
     return ret;
 }
 
-void httpp_free_any_key(char **keys)
+void httpp_free_any_key(char **keys : itype(char*_Ptr<char> ) )
 {
-    char **p;
+    char*_Ptr<char> p = NULL;
 
     if (!keys)
         return;
@@ -839,7 +839,7 @@ void httpp_free_any_key(char **keys)
     free(keys);
 }
 
-const char *httpp_get_param(http_parser_t *parser, const char *name)
+const char * httpp_get_param(_Ptr<http_parser_t> parser, _Ptr<const char> name)
 {
     const char *ret = _httpp_get_param(parser->postvars, name);
 
@@ -849,7 +849,7 @@ const char *httpp_get_param(http_parser_t *parser, const char *name)
     return _httpp_get_param(parser->queryvars, name);
 }
 
-static void httpp_clear(http_parser_t *parser)
+static void httpp_clear(_Ptr<http_parser_t> parser)
 {
     parser->req_type = httpp_req_none;
     if (parser->uri)
@@ -861,7 +861,7 @@ static void httpp_clear(http_parser_t *parser)
     parser->vars = NULL;
 }
 
-int httpp_addref(http_parser_t *parser)
+int httpp_addref(_Ptr<http_parser_t> parser)
 {
     if (!parser)
         return -1;
@@ -871,7 +871,7 @@ int httpp_addref(http_parser_t *parser)
     return 0;
 }
 
-int httpp_release(http_parser_t *parser)
+int httpp_release(_Ptr<http_parser_t> parser)
 {
     if (!parser)
         return -1;
@@ -886,7 +886,7 @@ int httpp_release(http_parser_t *parser)
     return 0;
 }
 
-static char *_lowercase(char *str)
+static char * _lowercase(char *str)
 {
     char *p = str;
     for (; *p != '\0'; p++)
@@ -895,7 +895,7 @@ static char *_lowercase(char *str)
     return str;
 }
 
-static int _compare_vars(void *compare_arg, void *a, void *b)
+static int _compare_vars(void* compare_arg, void *a, void *b)
 {
     http_var_t *vara, *varb;
 
@@ -921,7 +921,7 @@ static int _free_vars(void *key)
     return 1;
 }
 
-httpp_request_type_e httpp_str_to_method(const char * method) {
+httpp_request_type_e httpp_str_to_method(const char *method) {
     if (strcasecmp("GET", method) == 0) {
         return httpp_req_get;
     } else if (strcasecmp("POST", method) == 0) {

@@ -80,8 +80,8 @@
 /* thread starting structure */
 typedef struct thread_start_tag {
     /* the real start routine and arg */
-    void *(*start_routine)(void *);
-    void *arg;
+    _Ptr<void* (void* )> start_routine;
+    void* arg;
 
     /* the other stuff we need to make sure this thread is inserted into
     ** the thread tree
@@ -127,16 +127,16 @@ static int _compare_mutexes(void *compare_arg, void *a, void *b);
 static int _free_mutex(void *key);
 #endif
 
-static int _compare_threads(void *compare_arg, void *a, void *b);
+static int _compare_threads(void* compare_arg, void *a, void *b);
 static int _free_thread(void *key);
 
 /* mutex fuctions */
-static void _mutex_create(mutex_t *mutex);
-static void _mutex_lock(mutex_t *mutex);
-static void _mutex_unlock(mutex_t *mutex);
+static void _mutex_create(_Ptr<mutex_t> mutex);
+static void _mutex_lock(_Ptr<mutex_t> mutex);
+static void _mutex_unlock(_Ptr<mutex_t> mutex);
 
 /* misc thread stuff */
-static void *_start_routine(void *arg);
+static void *_start_routine(void *arg) : itype(_Ptr<void> ) ;
 static void _catch_signals(void);
 static void _block_signals(void);
 
@@ -268,8 +268,7 @@ static void _catch_signals(void)
 }
 
 
-thread_type *thread_create_c(char *name, void *(*start_routine)(void *),
-        void *arg, int detached, int line, char *file)
+thread_type * thread_create_c(_Nt_array_ptr<char> name, _Ptr<void* (void* )> start_routine, void* arg, int detached, int line, _Nt_array_ptr<char> file)
 {
     thread_type *thread = NULL;
     thread_start_t *start = NULL;
@@ -333,7 +332,7 @@ thread_type *thread_create_c(char *name, void *(*start_routine)(void *),
 **
 ** creates a mutex
 */
-static void _mutex_create(mutex_t *mutex)
+static void _mutex_create(_Ptr<mutex_t> mutex)
 {
 #ifdef DEBUG_MUTEXES
     mutex->thread_id = MUTEX_STATE_NEVERLOCKED;
@@ -343,7 +342,7 @@ static void _mutex_create(mutex_t *mutex)
     pthread_mutex_init(&mutex->sys_mutex, NULL);
 }
 
-void thread_mutex_create_c(mutex_t *mutex, int line, char *file)
+void thread_mutex_create_c(_Ptr<mutex_t> mutex, int line, _Ptr<char> file)
 {
     _mutex_create(mutex);
 
@@ -355,7 +354,7 @@ void thread_mutex_create_c(mutex_t *mutex, int line, char *file)
 #endif
 }
 
-void thread_mutex_destroy (mutex_t *mutex)
+void thread_mutex_destroy(_Ptr<mutex_t> mutex)
 {
     pthread_mutex_destroy(&mutex->sys_mutex);
 
@@ -366,7 +365,7 @@ void thread_mutex_destroy (mutex_t *mutex)
 #endif
 }
 
-void thread_mutex_lock_c(mutex_t *mutex, int line, char *file)
+void thread_mutex_lock_c(_Ptr<mutex_t> mutex, int line, _Ptr<char> file)
 {
 #ifdef DEBUG_MUTEXES
     thread_type *th = thread_self();
@@ -438,7 +437,7 @@ void thread_mutex_lock_c(mutex_t *mutex, int line, char *file)
 #endif /* DEBUG_MUTEXES */
 }
 
-void thread_mutex_unlock_c(mutex_t *mutex, int line, char *file)
+void thread_mutex_unlock_c(_Ptr<mutex_t> mutex, int line, _Ptr<char> file)
 {
 #ifdef DEBUG_MUTEXES
     thread_type *th = thread_self();
@@ -503,29 +502,29 @@ void thread_mutex_unlock_c(mutex_t *mutex, int line, char *file)
 #endif /* DEBUG_MUTEXES */
 }
 
-void thread_cond_create_c(cond_t *cond, int line, char *file)
+void thread_cond_create_c(_Ptr<cond_t> cond, int line, _Ptr<char> file)
 {
     pthread_cond_init(&cond->sys_cond, NULL);
     pthread_mutex_init(&cond->cond_mutex, NULL);
 }
 
-void thread_cond_destroy(cond_t *cond)
+void thread_cond_destroy(_Ptr<cond_t> cond)
 {
     pthread_mutex_destroy(&cond->cond_mutex);
     pthread_cond_destroy(&cond->sys_cond);
 }
 
-void thread_cond_signal_c(cond_t *cond, int line, char *file)
+void thread_cond_signal_c(_Ptr<cond_t> cond, int line, _Ptr<char> file)
 {
     pthread_cond_signal(&cond->sys_cond);
 }
 
-void thread_cond_broadcast_c(cond_t *cond, int line, char *file)
+void thread_cond_broadcast_c(_Ptr<cond_t> cond, int line, _Ptr<char> file)
 {
     pthread_cond_broadcast(&cond->sys_cond);
 }
 
-void thread_cond_timedwait_c(cond_t *cond, int millis, int line, char *file)
+void thread_cond_timedwait_c(_Ptr<cond_t> cond, int millis, int line, _Ptr<char> file)
 {
     struct timespec time;
 
@@ -537,39 +536,39 @@ void thread_cond_timedwait_c(cond_t *cond, int millis, int line, char *file)
     pthread_mutex_unlock(&cond->cond_mutex);
 }
 
-void thread_cond_wait_c(cond_t *cond, int line, char *file)
+void thread_cond_wait_c(_Ptr<cond_t> cond, int line, _Ptr<char> file)
 {
     pthread_mutex_lock(&cond->cond_mutex);
     pthread_cond_wait(&cond->sys_cond, &cond->cond_mutex);
     pthread_mutex_unlock(&cond->cond_mutex);
 }
 
-void thread_rwlock_create_c(rwlock_t *rwlock, int line, char *file)
+void thread_rwlock_create_c(_Ptr<rwlock_t> rwlock, int line, _Ptr<char> file)
 {
     pthread_rwlock_init(&rwlock->sys_rwlock, NULL);
 }
 
-void thread_rwlock_destroy(rwlock_t *rwlock)
+void thread_rwlock_destroy(_Ptr<rwlock_t> rwlock)
 {
     pthread_rwlock_destroy(&rwlock->sys_rwlock);
 }
 
-void thread_rwlock_rlock_c(rwlock_t *rwlock, int line, char *file)
+void thread_rwlock_rlock_c(_Ptr<rwlock_t> rwlock, int line, _Ptr<char> file)
 {
     pthread_rwlock_rdlock(&rwlock->sys_rwlock);
 }
 
-void thread_rwlock_wlock_c(rwlock_t *rwlock, int line, char *file)
+void thread_rwlock_wlock_c(_Ptr<rwlock_t> rwlock, int line, _Ptr<char> file)
 {
     pthread_rwlock_wrlock(&rwlock->sys_rwlock);
 }
 
-void thread_rwlock_unlock_c(rwlock_t *rwlock, int line, char *file)
+void thread_rwlock_unlock_c(_Ptr<rwlock_t> rwlock, int line, _Ptr<char> file)
 {
     pthread_rwlock_unlock(&rwlock->sys_rwlock);
 }
 
-void thread_exit_c(long val, int line, char *file)
+void thread_exit_c(long val, int line, _Ptr<char> file)
 {
     thread_type *th = thread_self();
 
@@ -642,11 +641,11 @@ void thread_sleep(unsigned long len)
 #endif
 }
 
-static void *_start_routine(void *arg)
+static void *_start_routine(void *arg) : itype(_Ptr<void> ) 
 {
     thread_start_t *start = (thread_start_t *)arg;
-    void *(*start_routine)(void *) = start->start_routine;
-    void *real_arg = start->arg;
+    _Ptr<void* (void* )> start_routine =  start->start_routine;
+    void* real_arg =  start->arg;
     thread_type *thread = start->thread;
 
     _block_signals();
@@ -681,7 +680,7 @@ static void *_start_routine(void *arg)
 
 thread_type *thread_self(void)
 {
-    avl_node *node;
+    _Ptr<avl_node> node = NULL;
     thread_type *th;
     pthread_t sys_thread = pthread_self();
 
@@ -717,7 +716,7 @@ thread_type *thread_self(void)
     return NULL;
 }
 
-void thread_rename(const char *name)
+void thread_rename(_Nt_array_ptr<const char> name)
 {
     thread_type *th;
 
@@ -727,12 +726,12 @@ void thread_rename(const char *name)
     th->name = strdup(name);
 }
 
-static void _mutex_lock(mutex_t *mutex)
+static void _mutex_lock(_Ptr<mutex_t> mutex)
 {
     pthread_mutex_lock(&mutex->sys_mutex);
 }
 
-static void _mutex_unlock(mutex_t *mutex)
+static void _mutex_unlock(_Ptr<mutex_t> mutex)
 {
     pthread_mutex_unlock(&mutex->sys_mutex);
 }
@@ -776,7 +775,7 @@ static int _compare_mutexes(void *compare_arg, void *a, void *b)
 }
 #endif
 
-static int _compare_threads(void *compare_arg, void *a, void *b)
+static int _compare_threads(void* compare_arg, void *a, void *b)
 {
     thread_type *t1, *t2;
 
@@ -826,26 +825,26 @@ static int _free_thread(void *key)
 
 
 #ifdef HAVE_PTHREAD_SPIN_LOCK
-void thread_spin_create (spin_t *spin)
+void thread_spin_create(_Ptr<spin_t> spin)
 {
     int x = pthread_spin_init (&spin->lock, PTHREAD_PROCESS_PRIVATE);
     if (x)
         abort();
 }
 
-void thread_spin_destroy (spin_t *spin)
+void thread_spin_destroy(_Ptr<spin_t> spin)
 {
     pthread_spin_destroy (&spin->lock);
 }
 
-void thread_spin_lock (spin_t *spin)
+void thread_spin_lock(_Ptr<spin_t> spin)
 {
     int x = pthread_spin_lock (&spin->lock);
     if (x != 0)
         abort();
 }
 
-void thread_spin_unlock (spin_t *spin)
+void thread_spin_unlock(_Ptr<spin_t> spin)
 {
     pthread_spin_unlock (&spin->lock);
 }

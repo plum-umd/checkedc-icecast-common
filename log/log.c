@@ -82,7 +82,7 @@ typedef struct log_tag
     unsigned level;
 
     char *filename;
-    FILE *logfile;
+    _Ptr<FILE> logfile;
     off_t size;
     off_t trigger_level;
     int archive_timestamp;
@@ -93,7 +93,7 @@ typedef struct log_tag
     log_entry_t *log_head;
     log_entry_t **log_tail;
     
-    char *buffer;
+    _Ptr<char> buffer;
 } log_t;
 
 static log_t loglist[LOG_MAXLOGS];
@@ -103,7 +103,7 @@ static void _lock_logger(void);
 static void _unlock_logger(void);
 
 
-static int _log_open (int id)
+static int _log_open(int id)
 {
     if (loglist [id] . in_use == 0)
         return 0;
@@ -185,7 +185,7 @@ void log_initialize(void)
     _initialized = 1;
 }
 
-int log_open_file(FILE *file)
+int log_open_file(_Ptr<FILE> file)
 {
     int log_id;
 
@@ -202,10 +202,10 @@ int log_open_file(FILE *file)
 }
 
 
-int log_open(const char *filename)
+int log_open(_Nt_array_ptr<const char> filename)
 {
     int id;
-    FILE *file;
+    _Ptr<FILE> file = NULL;
 
     if (filename == NULL) return LOG_EINSANE;
     if (strcmp(filename, "") == 0) return LOG_EINSANE;
@@ -232,7 +232,7 @@ int log_open(const char *filename)
 
 
 /* set the trigger level to trigger, represented in kilobytes */
-void log_set_trigger(int id, unsigned trigger)
+void log_set_trigger(int id, unsigned int trigger)
 {
     if (id >= 0 && id < LOG_MAXLOGS && loglist [id] . in_use)
     {
@@ -241,7 +241,7 @@ void log_set_trigger(int id, unsigned trigger)
 }
 
 
-int log_set_filename(int id, const char *filename)
+int log_set_filename(int id, _Nt_array_ptr<const char> filename)
 {
     if (id < 0 || id >= LOG_MAXLOGS)
         return LOG_EINSANE;
@@ -270,14 +270,14 @@ int log_set_archive_timestamp(int id, int value)
 }
 
 
-int log_open_with_buffer(const char *filename, int size)
+int log_open_with_buffer(_Ptr<const char> filename, int size)
 {
     /* not implemented */
     return LOG_ENOTIMPL;
 }
 
 
-void log_set_lines_kept (int log_id, unsigned int count)
+void log_set_lines_kept(int log_id, unsigned int count)
 {
     if (log_id < 0 || log_id >= LOG_MAXLOGS) return;
     if (loglist[log_id].in_use == 0) return;
@@ -297,7 +297,7 @@ void log_set_lines_kept (int log_id, unsigned int count)
 }
 
 
-void log_set_level(int log_id, unsigned level)
+void log_set_level(int log_id, unsigned int level)
 {
     if (log_id < 0 || log_id >= LOG_MAXLOGS) return;
     if (loglist[log_id].in_use == 0) return;
@@ -378,7 +378,7 @@ void log_shutdown(void)
 }
 
 
-static int create_log_entry (int log_id, const char *pre, const char *line)
+static int create_log_entry(int log_id, _Nt_array_ptr<const char> pre, _Nt_array_ptr<const char> line)
 {
     log_entry_t *entry;
 
@@ -409,7 +409,7 @@ static int create_log_entry (int log_id, const char *pre, const char *line)
 }
 
 
-void log_contents (int log_id, char **_contents, unsigned int *_len)
+void log_contents(int log_id, _Ptr<char*> _contents, _Ptr<unsigned int> _len)
 {
     int remain;
     log_entry_t *entry;
@@ -439,7 +439,7 @@ void log_contents (int log_id, char **_contents, unsigned int *_len)
     _unlock_logger ();
 }
 
-static inline int __vsnprintf__is_print(int c, int allow_space)
+static int __vsnprintf__is_print(int c, int allow_space)
 {
     if ((c <= '"' || c == '`' || c == '\\') && !(allow_space && c == ' ')) {
         return 0;
@@ -448,7 +448,7 @@ static inline int __vsnprintf__is_print(int c, int allow_space)
     }
 }
 
-static inline size_t __vsnprintf__strlen(const char *str, int is_alt, int allow_space)
+static size_t __vsnprintf__strlen(const char *str, int is_alt, int allow_space)
 {
     size_t ret = 0;
 
@@ -653,10 +653,9 @@ static void __vsnprintf(char *str, size_t size, const char *format, va_list ap) 
     *str = 0;
 }
 
-void log_write(int log_id, unsigned priority, const char *cat, const char *func, 
-        const char *fmt, ...)
+void log_write(int log_id, unsigned int priority, _Ptr<const char> cat, _Ptr<const char> func, const char *fmt, ...)
 {
-    static const char *prior[] = { "EROR", "WARN", "INFO", "DBUG" };
+    static _Ptr<const char> prior[4] =  { "EROR", "WARN", "INFO", "DBUG" };
     int datelen;
     time_t now;
     char pre[256];

@@ -78,23 +78,23 @@ typedef unsigned int httpp_request_info_t;
 
 typedef struct http_var_tag http_var_t;
 struct http_var_tag {
-    char *name;
+    _Ptr<char> name;
     size_t values;
-    char **value;
+    _Ptr<_Ptr<char>> value;
 };
 
 typedef struct http_varlist_tag {
     http_var_t var;
-    struct http_varlist_tag *next;
+    _Ptr<struct http_varlist_tag> next;
 } http_varlist_t;
 
 typedef struct http_parser_tag {
     size_t refc;
     httpp_request_type_e req_type;
-    char *uri;
-    avl_tree *vars;
-    avl_tree *queryvars;
-    avl_tree *postvars;
+    _Ptr<char> uri;
+    _Ptr<avl_tree> vars;
+    _Ptr<avl_tree> queryvars;
+    _Ptr<avl_tree> postvars;
 } http_parser_t;
 
 #ifdef _mangle
@@ -123,27 +123,27 @@ typedef struct http_parser_tag {
 httpp_request_info_t httpp_request_info(httpp_request_type_e req);
 
 http_parser_t *httpp_create_parser(void);
-void httpp_initialize(http_parser_t *parser, http_varlist_t *defaults);
-int httpp_parse(http_parser_t *parser, const char *http_data, unsigned long len);
+void httpp_initialize(_Ptr<http_parser_t> parser, _Ptr<http_varlist_t> defaults);
+int httpp_parse(_Ptr<http_parser_t> parser, _Ptr<const char> http_data, unsigned long len);
 int httpp_parse_icy(http_parser_t *parser, const char *http_data, unsigned long len);
-int httpp_parse_response(http_parser_t *parser, const char *http_data, unsigned long len, const char *uri);
-int httpp_parse_postdata(http_parser_t *parser, const char *body_data, size_t len);
-void httpp_setvar(http_parser_t *parser, const char *name, const char *value);
-void httpp_deletevar(http_parser_t *parser, const char *name);
-const char *httpp_getvar(http_parser_t *parser, const char *name);
-void httpp_set_query_param(http_parser_t *parser, const char *name, const char *value);
-const char *httpp_get_query_param(http_parser_t *parser, const char *name);
-void httpp_set_post_param(http_parser_t *parser, const char *name, const char *value);
-const char *httpp_get_post_param(http_parser_t *parser, const char *name);
-const char *httpp_get_param(http_parser_t *parser, const char *name);
-const http_var_t *httpp_get_param_var(http_parser_t *parser, const char *name);
-const http_var_t *httpp_get_any_var(http_parser_t *parser, httpp_ns_t ns, const char *name);
-char ** httpp_get_any_key(http_parser_t *parser, httpp_ns_t ns);
-void httpp_free_any_key(char **keys);
-int httpp_addref(http_parser_t *parser);
-int httpp_release(http_parser_t *parser);
+int httpp_parse_response(_Ptr<http_parser_t> parser, _Ptr<const char> http_data, unsigned long len, const char *uri);
+int httpp_parse_postdata(_Ptr<http_parser_t> parser, const char *body_data, size_t len);
+void httpp_setvar(_Ptr<http_parser_t> parser, const char *name : itype(_Nt_array_ptr<const char> ) , const char *value : itype(_Nt_array_ptr<const char> ) );
+void httpp_deletevar(_Ptr<http_parser_t> parser, const char *name);
+const char * httpp_getvar(_Ptr<http_parser_t> parser, const char *name);
+void httpp_set_query_param(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> name, const char *value);
+const char * httpp_get_query_param(_Ptr<http_parser_t> parser, _Ptr<const char> name);
+void httpp_set_post_param(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> name, const char *value);
+const char * httpp_get_post_param(_Ptr<http_parser_t> parser, _Ptr<const char> name);
+const char * httpp_get_param(_Ptr<http_parser_t> parser, _Ptr<const char> name);
+const http_var_t * httpp_get_param_var(_Ptr<http_parser_t> parser, const char *name);
+const http_var_t * httpp_get_any_var(_Ptr<http_parser_t> parser, httpp_ns_t ns, const char *name);
+char ** httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns);
+void httpp_free_any_key(char **keys : itype(char*_Ptr<char> ) );
+int httpp_addref(_Ptr<http_parser_t> parser);
+int httpp_release(_Ptr<http_parser_t> parser);
 
 /* util functions */
-httpp_request_type_e httpp_str_to_method(const char * method);
+httpp_request_type_e httpp_str_to_method(const char *method);
  
 #endif

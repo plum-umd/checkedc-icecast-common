@@ -103,7 +103,7 @@ void sock_shutdown(void)
 ** in any case, it's as close as we can hope to get
 ** unless someone has better ideas on how to do this
 */
-char *sock_get_localip(char *buff, int len)
+_Ptr<char> sock_get_localip(_Ptr<char> buff, int len)
 {
     char temp[1024];
 
@@ -169,7 +169,7 @@ int sock_recoverable(int error)
     }
 }
 
-int sock_stalled (int error)
+int sock_stalled(int error)
 {
     switch (error)
     {
@@ -195,7 +195,7 @@ int sock_stalled (int error)
 }
 
 
-static int sock_connect_pending (int error)
+static int sock_connect_pending(int error)
 {
     return error == EINPROGRESS || error == EALREADY;
 }
@@ -204,7 +204,7 @@ static int sock_connect_pending (int error)
 **
 ** determines if a sock_t represents a valid socket
 */
-int sock_valid_socket(sock_t sock)
+int sock_valid_socket(int sock)
 {
     int ret;
     int optval;
@@ -219,7 +219,7 @@ int sock_valid_socket(sock_t sock)
 
 
 /* determines if the passed socket is still connected */
-int sock_active (sock_t sock)
+int sock_active(int sock)
 {
     char c;
     int l;
@@ -257,7 +257,7 @@ int inet_aton(const char *s, struct in_addr *a)
  * 1 for blocking
  * 0 for nonblocking
  */
-int sock_set_blocking(sock_t sock, int block)
+int sock_set_blocking(int sock, int block)
 {
 #ifdef _WIN32
 #ifdef __MINGW32__
@@ -278,14 +278,14 @@ int sock_set_blocking(sock_t sock, int block)
 #endif
 }
 
-int sock_set_nolinger(sock_t sock)
+int sock_set_nolinger(int sock)
 {
     struct linger lin = { 0, 0 };
     return setsockopt(sock, SOL_SOCKET, SO_LINGER, (void *)&lin, 
             sizeof(struct linger));
 }
 
-int sock_set_nodelay(sock_t sock)
+int sock_set_nodelay(int sock)
 {
     int nodelay = 1;
 
@@ -293,7 +293,7 @@ int sock_set_nodelay(sock_t sock)
             sizeof(int));
 }
 
-int sock_set_keepalive(sock_t sock)
+int sock_set_keepalive(int sock)
 {
     int keepalive = 1;
     return setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&keepalive, 
@@ -304,7 +304,7 @@ int sock_set_keepalive(sock_t sock)
 **
 ** close the socket
 */
-int sock_close(sock_t sock)
+int sock_close(int sock)
 {
 #ifdef _WIN32
     return closesocket(sock);
@@ -319,7 +319,7 @@ int sock_close(sock_t sock)
  */
 #ifdef HAVE_WRITEV
 
-ssize_t sock_writev (sock_t sock, const struct iovec *iov, size_t count)
+ssize_t sock_writev(int sock, const struct iovec *iov, size_t count)
 {
     return writev (sock, iov, count);
 }
@@ -357,7 +357,7 @@ ssize_t sock_writev (sock_t sock, const struct iovec *iov, size_t count)
 ** write bytes to the socket
 ** this function will _NOT_ block
 */
-int sock_write_bytes(sock_t sock, const void *buff, size_t len)
+int sock_write_bytes(int sock, const void *buff, size_t len)
 {
     /* sanity check */
     if (!buff) {
@@ -376,7 +376,7 @@ int sock_write_bytes(sock_t sock, const void *buff, size_t len)
 ** writes a string to a socket
 ** This function must only be called with a blocking socket.
 */
-int sock_write_string(sock_t sock, const char *buff)
+int sock_write_string(int sock, const char *buff)
 {
     return (sock_write_bytes(sock, buff, strlen(buff)) > 0);
 }
@@ -387,7 +387,7 @@ int sock_write_string(sock_t sock, const char *buff)
 ** this function must only be called with a blocking socket.
 ** will truncate the string if it's greater than 1024 chars.
 */
-int sock_write(sock_t sock, const char *fmt, ...)
+int sock_write(int sock, _Ptr<const char> fmt, ...)
 {
     int rc;
     va_list ap;
@@ -428,7 +428,7 @@ int sock_write_fmt(sock_t sock, const char *fmt, va_list ap)
     return ret;
 }
 #else
-int sock_write_fmt(sock_t sock, const char *fmt, va_list ap)
+int sock_write_fmt(int sock, const char *fmt, va_list ap)
 {
     char buffer [1024], *buff = buffer;
     int len;
@@ -463,7 +463,7 @@ int sock_write_fmt(sock_t sock, const char *fmt, va_list ap)
 #endif
 
 
-int sock_read_bytes(sock_t sock, char *buff, size_t len)
+int sock_read_bytes(int sock, char *buff, size_t len)
 {
 
     /*if (!sock_valid_socket(sock)) return 0; */
@@ -481,7 +481,7 @@ int sock_read_bytes(sock_t sock, char *buff, size_t len)
 **
 ** this function will probably not work on sockets in nonblocking mode
 */
-int sock_read_line(sock_t sock, char *buff, const int len)
+int sock_read_line(int sock, char *buff, const int len)
 {
     char c = '\0';
     int read_bytes, pos;
@@ -523,7 +523,7 @@ int sock_read_line(sock_t sock, char *buff, const int len)
  * return 1 for ok 
  */
 #ifdef HAVE_POLL
-int sock_connected (sock_t sock, int timeout)
+int sock_connected(int sock, int timeout)
 {
     struct pollfd check;
     int val = SOCK_ERROR;
@@ -913,12 +913,12 @@ sock_t sock_get_server_socket(int port, const char *sinterface)
 
 #endif
 
-void sock_set_send_buffer (sock_t sock, int win_size)
+void sock_set_send_buffer(int sock, int win_size)
 {
     setsockopt (sock, SOL_SOCKET, SO_SNDBUF, (char *) &win_size, sizeof(win_size));
 }
 
-int sock_listen(sock_t serversock, int backlog)
+int sock_listen(int serversock, int backlog)
 {
     if (!sock_valid_socket(serversock))
         return 0;

@@ -37,8 +37,8 @@
 struct httpp_encoding_tag {
     size_t refc;
 
-    ssize_t (*process_read)(httpp_encoding_t *self, void *buf, size_t len, ssize_t (*cb)(void*, void*, size_t), void *userdata);
-    ssize_t (*process_write)(httpp_encoding_t *self, const void *buf, size_t len, ssize_t (*cb)(void*, const void*, size_t), void *userdata);
+    _Ptr<ssize_t (_Ptr<httpp_encoding_t> , void* , size_t , _Ptr<ssize_t (void* , void* , size_t )> , void* )> process_read;
+    _Ptr<ssize_t (_Ptr<httpp_encoding_t> , _Ptr<const void> , size_t , _Ptr<ssize_t (void* , _Ptr<const void> , size_t )> , void* )> process_write;
 
     httpp_meta_t *meta_read;
     httpp_meta_t *meta_write;
@@ -49,7 +49,7 @@ struct httpp_encoding_tag {
     void *buf_read_decoded; /* decoded stuff */
     size_t buf_read_decoded_offset, buf_read_decoded_len;
 
-    void *buf_write_raw; /* input buffer */
+    void* buf_write_raw; /* input buffer */
     size_t buf_write_raw_offset, buf_write_raw_len;
 
     void *buf_write_encoded; /* encoded output */
@@ -62,13 +62,13 @@ struct httpp_encoding_tag {
 
 
 /* Handlers, at end of file */
-static ssize_t __enc_identity_read(httpp_encoding_t *self, void *buf, size_t len, ssize_t (*cb)(void*, void*, size_t), void *userdata);
-static ssize_t __enc_identity_write(httpp_encoding_t *self, const void *buf, size_t len, ssize_t (*cb)(void*, const void*, size_t), void *userdata);
-static ssize_t __enc_chunked_read(httpp_encoding_t *self, void *buf, size_t len, ssize_t (*cb)(void*, void*, size_t), void *userdata);
-static ssize_t __enc_chunked_write(httpp_encoding_t *self, const void *buf, size_t len, ssize_t (*cb)(void*, const void*, size_t), void *userdata);
+static ssize_t __enc_identity_read(httpp_encoding_t *self, void* buf, size_t len, _Ptr<ssize_t (void* , void* , size_t )> cb, void* userdata);
+static ssize_t __enc_identity_write(httpp_encoding_t *self, _Ptr<const void> buf, size_t len, _Ptr<ssize_t (void* , _Ptr<const void> , size_t )> cb, void* userdata);
+static ssize_t __enc_chunked_read(_Ptr<httpp_encoding_t> self, void *buf, size_t len, _Ptr<ssize_t (void* , void* , size_t )> cb, void* userdata);
+static ssize_t __enc_chunked_write(_Ptr<httpp_encoding_t> self, _Ptr<const void> buf, size_t len, ssize_t (*cb)(void *, const void *, size_t), void *userdata);
 
 /* function to move some data out of our buffers */
-ssize_t __copy_buffer(void *dst, void **src, size_t *boffset, size_t *blen, size_t len)
+ssize_t __copy_buffer(void* dst, void** src, _Ptr<size_t> boffset, _Ptr<size_t> blen, size_t len)
 {
     void *p;
     size_t have_len;
@@ -100,7 +100,7 @@ ssize_t __copy_buffer(void *dst, void **src, size_t *boffset, size_t *blen, size
 }
 
 /* try to flush output buffers */
-static inline void __flush_output(httpp_encoding_t *self, ssize_t (*cb)(void*, const void*, size_t), void *userdata)
+static void __flush_output(_Ptr<httpp_encoding_t> self, _Ptr<ssize_t (void* , const void* , size_t )> cb, void* userdata)
 {
     if (cb && self->buf_write_encoded) {
         ssize_t ret = cb(userdata,
@@ -120,7 +120,7 @@ static inline void __flush_output(httpp_encoding_t *self, ssize_t (*cb)(void*, c
 
 /* meta data functions */
 /* meta data is to be used in a encoding-specific way */
-httpp_meta_t     *httpp_encoding_meta_new(const char *key, const char *value)
+httpp_meta_t * httpp_encoding_meta_new(_Nt_array_ptr<const char> key, _Nt_array_ptr<const char> value)
 {
     httpp_meta_t *ret = calloc(1, sizeof(httpp_meta_t));
     if (!ret)
@@ -142,7 +142,7 @@ fail:
     return NULL;
 }
 
-int               httpp_encoding_meta_free(httpp_meta_t *self)
+int httpp_encoding_meta_free(httpp_meta_t *self)
 {
     while (self) {
         httpp_meta_t *cur = self;
@@ -158,7 +158,7 @@ int               httpp_encoding_meta_free(httpp_meta_t *self)
     return 0;
 }
 
-int               httpp_encoding_meta_append(httpp_meta_t **dst, httpp_meta_t *next)
+int httpp_encoding_meta_append(httpp_meta_t **dst, httpp_meta_t *next)
 {
     httpp_meta_t **cur;
 
@@ -177,7 +177,7 @@ int               httpp_encoding_meta_append(httpp_meta_t **dst, httpp_meta_t *n
 }
 
 /* General setup */
-httpp_encoding_t *httpp_encoding_new(const char *encoding) {
+httpp_encoding_t * httpp_encoding_new(const char *encoding) {
     httpp_encoding_t *ret = calloc(1, sizeof(httpp_encoding_t));
     if (!ret)
         return NULL;
@@ -202,7 +202,7 @@ fail:
     return NULL;
 }
 
-int               httpp_encoding_addref(httpp_encoding_t *self)
+int httpp_encoding_addref(_Ptr<httpp_encoding_t> self)
 {
     if (!self)
         return -1;
@@ -210,7 +210,7 @@ int               httpp_encoding_addref(httpp_encoding_t *self)
     return 0;
 }
 
-int               httpp_encoding_release(httpp_encoding_t *self)
+int httpp_encoding_release(httpp_encoding_t *self : itype(_Ptr<httpp_encoding_t> ) )
 {
     if (!self)
         return -1;
@@ -237,7 +237,7 @@ int               httpp_encoding_release(httpp_encoding_t *self)
 /* Read data from backend.
  * if cb is NULL this will read from the internal buffer.
  */
-ssize_t           httpp_encoding_read(httpp_encoding_t *self, void *buf, size_t len, ssize_t (*cb)(void*, void*, size_t), void *userdata)
+ssize_t httpp_encoding_read(_Ptr<httpp_encoding_t> self, void *buf, size_t len, _Ptr<ssize_t (void* , void* , size_t )> cb, void* userdata)
 {
     ssize_t done = 0;
     ssize_t ret;
@@ -281,7 +281,7 @@ ssize_t           httpp_encoding_read(httpp_encoding_t *self, void *buf, size_t 
     return done;
 }
 
-int               httpp_encoding_eof(httpp_encoding_t *self, int (*cb)(void*), void *userdata)
+int httpp_encoding_eof(_Ptr<httpp_encoding_t> self, _Ptr<int (void* )> cb, void* userdata)
 {
     if (!self)
         return -1;
@@ -302,7 +302,7 @@ int               httpp_encoding_eof(httpp_encoding_t *self, int (*cb)(void*), v
  * After a call to this function the meta data is released from the
  * encoding object and the caller is responsible to free it.
  */
-httpp_meta_t     *httpp_encoding_get_meta(httpp_encoding_t *self)
+httpp_meta_t * httpp_encoding_get_meta(_Ptr<httpp_encoding_t> self)
 {
     httpp_meta_t *ret;
 
@@ -319,7 +319,7 @@ httpp_meta_t     *httpp_encoding_get_meta(httpp_encoding_t *self)
  * Depending on encoding flushing buffers may not be safe if not
  * at end of stream.
  */
-ssize_t           httpp_encoding_write(httpp_encoding_t *self, const void *buf, size_t len, ssize_t (*cb)(void*, const void*, size_t), void *userdata)
+ssize_t httpp_encoding_write(_Ptr<httpp_encoding_t> self, _Ptr<const void> buf, size_t len, _Ptr<ssize_t (void* , _Ptr<const void> , size_t )> cb, void* userdata)
 {
     ssize_t ret;
 
@@ -339,7 +339,7 @@ ssize_t           httpp_encoding_write(httpp_encoding_t *self, const void *buf, 
 }
 
 /* Check if we have something to flush. */
-ssize_t           httpp_encoding_pending(httpp_encoding_t *self)
+ssize_t httpp_encoding_pending(_Ptr<httpp_encoding_t> self)
 {
     if (!self)
         return -1;
@@ -351,7 +351,7 @@ ssize_t           httpp_encoding_pending(httpp_encoding_t *self)
 /* Attach meta data to the stream.
  * this is to be written out as soon as the encoding supports.
  */
-int               httpp_encoding_append_meta(httpp_encoding_t *self, httpp_meta_t *meta)
+int httpp_encoding_append_meta(_Ptr<httpp_encoding_t> self, _Ptr<httpp_meta_t> meta)
 {
     if (!self)
         return -1;
@@ -359,7 +359,7 @@ int               httpp_encoding_append_meta(httpp_encoding_t *self, httpp_meta_
 }
 
 /* handlers for encodings */
-static ssize_t __enc_identity_read(httpp_encoding_t *self, void *buf, size_t len, ssize_t (*cb)(void*, void*, size_t), void *userdata)
+static ssize_t __enc_identity_read(httpp_encoding_t *self, void* buf, size_t len, _Ptr<ssize_t (void* , void* , size_t )> cb, void* userdata)
 {
     (void)self;
     if (!cb)
@@ -367,7 +367,7 @@ static ssize_t __enc_identity_read(httpp_encoding_t *self, void *buf, size_t len
     return cb(userdata, buf, len);
 }
 
-static ssize_t __enc_identity_write(httpp_encoding_t *self, const void *buf, size_t len, ssize_t (*cb)(void*, const void*, size_t), void *userdata)
+static ssize_t __enc_identity_write(httpp_encoding_t *self, _Ptr<const void> buf, size_t len, _Ptr<ssize_t (void* , _Ptr<const void> , size_t )> cb, void* userdata)
 {
     (void)self;
     if (!cb)
@@ -388,7 +388,7 @@ static ssize_t __enc_identity_write(httpp_encoding_t *self, const void *buf, siz
  *
  */
 
-static void __enc_chunked_read_extentions(httpp_encoding_t *self, char *p, size_t len)
+static void __enc_chunked_read_extentions(_Ptr<httpp_encoding_t> self, char *p, size_t len)
 {
     /* ok. If you want to ruin your day... go ahead and try to understand this. */
     httpp_meta_t **parent;
@@ -482,7 +482,7 @@ static void __enc_chunked_read_extentions(httpp_encoding_t *self, char *p, size_
     }
 }
 
-static ssize_t __enc_chunked_read(httpp_encoding_t *self, void *buf, size_t len, ssize_t (*cb)(void*, void*, size_t), void *userdata)
+static ssize_t __enc_chunked_read(_Ptr<httpp_encoding_t> self, void *buf, size_t len, _Ptr<ssize_t (void* , void* , size_t )> cb, void* userdata)
 {
     ssize_t ret;
     size_t buflen;
@@ -702,7 +702,7 @@ static ssize_t __enc_chunked_read(httpp_encoding_t *self, void *buf, size_t len,
     return 0;
 }
 
-static size_t __enc_chunked_write_extensions_valuelen(httpp_meta_t *cur)
+static size_t __enc_chunked_write_extensions_valuelen(httpp_meta_t *cur : itype(_Ptr<httpp_meta_t> ) )
 {
     size_t ret = cur->value_len;
     size_t i;
@@ -718,7 +718,7 @@ static size_t __enc_chunked_write_extensions_valuelen(httpp_meta_t *cur)
     return ret;
 }
 
-static char *__enc_chunked_write_extensions(httpp_encoding_t *self)
+static char * __enc_chunked_write_extensions(_Ptr<httpp_encoding_t> self)
 {
     size_t buflen;
     void *buf;
@@ -785,7 +785,7 @@ static char *__enc_chunked_write_extensions(httpp_encoding_t *self)
 
     return buf;
 }
-static ssize_t __enc_chunked_write(httpp_encoding_t *self, const void *buf, size_t len, ssize_t (*cb)(void*, const void*, size_t), void *userdata)
+static ssize_t __enc_chunked_write(_Ptr<httpp_encoding_t> self, _Ptr<const void> buf, size_t len, ssize_t (*cb)(void *, const void *, size_t), void *userdata)
 {
     char encoded_length[32];
     char *extensions = NULL;
