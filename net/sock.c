@@ -110,7 +110,7 @@ _Ptr<char> sock_get_localip(_Ptr<char> buff, int len)
     if (gethostname(temp, sizeof(temp)) != 0)
         return NULL;
 
-    if (resolver_getip(temp, buff, len))
+    if (resolver_getip(temp, (char *)buff, len))
         return buff;
 
     return NULL;
@@ -393,7 +393,7 @@ int sock_write(int sock, _Ptr<const char> fmt, ...)
     va_list ap;
 
     va_start (ap, fmt);
-    rc = sock_write_fmt (sock, fmt, ap);
+    rc = sock_write_fmt (sock, (char *)fmt, ap);
     va_end (ap);
 
     return rc;
