@@ -26,9 +26,9 @@ extern "C" {
 
 typedef struct avl_node_tag {
   void* key;
-  _Ptr<struct avl_node_tag> left;
-  _Ptr<struct avl_node_tag> right;  
-  _Ptr<struct avl_node_tag> parent;
+  struct avl_node_tag *left;
+  struct avl_node_tag *right;  
+  struct avl_node_tag *parent;
   /*
    * The lower 2 bits of <rank_and_balance> specify the balance
    * factor: 00==-1, 01==0, 10==+1.
@@ -94,7 +94,7 @@ typedef int (*avl_key_printer_fun_type)    (char *, void *);
 #endif
 
 typedef struct _avl_tree {
-  _Ptr<avl_node> root;
+  avl_node *root;
   unsigned int          height;
   unsigned int          length;
   _Ptr<int (void* , void* , void* )> compare_fun;
@@ -127,7 +127,7 @@ int avl_get_span_by_two_keys(_Ptr<avl_tree> tree, void *low_key, void *high_key,
 
 int avl_verify(_Ptr<avl_tree> tree);
 
-void avl_print_tree(_Ptr<avl_tree> tree, _Ptr<int (_Nt_array_ptr<char> , void* )> key_printer);
+void avl_print_tree(_Ptr<avl_tree> tree, _Ptr<int (char* , void* )> key_printer);
 
 avl_node * avl_get_first(_Ptr<avl_tree> tree);
 

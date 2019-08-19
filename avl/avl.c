@@ -130,13 +130,13 @@ int avl_insert(_Ptr<avl_tree> ob, void *key)
     int a;
 
     t = ob->root;
-    s = p = t->right;
+    s = p = (avl_node *)t->right;
 
     while (1) {
       if (ob->compare_fun (ob->compare_arg, key, p->key) < 1) {
     /* move left */
     AVL_SET_RANK (p, (AVL_GET_RANK (p) + 1));
-    q = p->left;
+    q = (avl_node *)p->left;
     if (!q) {
       /* insert */
       avl_node * q_node = avl_node_new (key, p);
@@ -154,7 +154,7 @@ int avl_insert(_Ptr<avl_tree> ob, void *key)
     p = q;
       } else {
     /* move right */
-    q = p->right;
+    q = (avl_node *)p->right;
     if (!q) {
       /* insert */
       avl_node * q_node = avl_node_new (key, p);
@@ -177,17 +177,17 @@ int avl_insert(_Ptr<avl_tree> ob, void *key)
     
     /* adjust balance factors */
     if (ob->compare_fun (ob->compare_arg, key, s->key) < 1) {
-      r = p = s->left;
+      r = p = (avl_node *)s->left;
     } else {
-      r = p = s->right;
+      r = p = (avl_node *)s->right;
     }
     while (p != q) {
       if (ob->compare_fun (ob->compare_arg, key, p->key) < 1) {
     AVL_SET_BALANCE (p, -1);
-    p = p->left;
+    p = (avl_node *)p->left;
       } else {
     AVL_SET_BALANCE (p, +1);
-    p = p->right;
+    p = (avl_node *)p->right;
       }
     }
     
@@ -232,7 +232,7 @@ int avl_insert(_Ptr<avl_tree> ob, void *key)
       } else if (AVL_GET_BALANCE (r) == -a) {
     /* double rotation */
     if (a == -1) {
-      p = r->right;
+      p = (avl_node *)r->right;
       r->right = p->left;
       if (p->left) {
         p->left->parent = r;
@@ -248,7 +248,7 @@ int avl_insert(_Ptr<avl_tree> ob, void *key)
       AVL_SET_RANK (p, (AVL_GET_RANK (p) + AVL_GET_RANK (r)));
       AVL_SET_RANK (s, (AVL_GET_RANK (s) - AVL_GET_RANK (p)));
     } else {
-      p = r->left;
+      p = (avl_node *)r->left;
       r->left = p->right;
       if (p->right) {
         p->right->parent = r;
@@ -1025,9 +1025,9 @@ typedef struct _link_node {
 
 static char balance_chars[3] = {'\\', '-', '/'};
 
-static int default_key_printer(_Nt_array_ptr<char> buffer, void* key)
+static int default_key_printer(char *buffer, void* key)
 {
-  return snprintf (buffer, AVL_KEY_PRINTER_BUFLEN, "%p", key);
+  return snprintf ((char*)buffer, AVL_KEY_PRINTER_BUFLEN, "%p", key);
 }  
 
 /*
@@ -1095,7 +1095,7 @@ static void print_node(_Ptr<int (char* , void* )> key_printer, avl_node *node : 
   } 
 }  
 
-void avl_print_tree(_Ptr<avl_tree> tree, _Ptr<int (_Nt_array_ptr<char> , void* )> key_printer)
+void avl_print_tree(_Ptr<avl_tree> tree, _Ptr<int (char* , void* )> key_printer)
 {
   link_node top = {NULL, 0, 0};
   if (!key_printer) {
