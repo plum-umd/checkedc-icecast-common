@@ -173,7 +173,7 @@ void thread_initialize(void)
 
     /* initialize the thread tree and insert the main thread */
 
-    _threadtree = avl_tree_new(_compare_threads, NULL);
+    _threadtree = (avl_tree *)avl_tree_new(_compare_threads, NULL);
 
     thread = (thread_type *)malloc(sizeof(thread_type));
 
@@ -680,7 +680,7 @@ static void *_start_routine(void *arg) : itype(_Ptr<void> )
 
 thread_type *thread_self(void)
 {
-    _Ptr<avl_node> node = NULL;
+    avl_node *node;
     thread_type *th;
     pthread_t sys_thread = pthread_self();
 

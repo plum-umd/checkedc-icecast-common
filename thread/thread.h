@@ -33,13 +33,13 @@
 typedef struct {
     /* the local id for the thread, and it's name */
     long thread_id;
-    _Ptr<char> name;
+    char *name;
 
     /* the time the thread was created */
     time_t create_time;
     
     /* the file and line which created this thread */
-    _Ptr<char> file;
+    char *file;
     int line;
 
     /* is the thread running detached? */

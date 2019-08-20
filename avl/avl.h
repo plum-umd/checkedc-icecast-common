@@ -107,11 +107,11 @@ typedef struct _avl_tree {
 _Ptr<avl_tree> avl_tree_new(_Ptr<int (void* , void* , void* )> compare_fun, void* compare_arg);
 avl_node *avl_node_new(void *key, avl_node *parent) : itype(_Ptr<avl_node> ) ;
 
-void avl_tree_free(_Ptr<avl_tree> tree, _Ptr<int (void* )> free_key_fun);
+void avl_tree_free(avl_tree *tree, _Ptr<int (void* )> free_key_fun);
 
-int avl_insert(_Ptr<avl_tree> ob, void *key);
+int avl_insert(avl_tree *ob, void *key);
 
-int avl_delete(_Ptr<avl_tree> tree, void *key, _Ptr<int (void* )> free_key_fun);
+int avl_delete(avl_tree *tree, void *key, _Ptr<int (void* )> free_key_fun);
 
 int avl_get_by_index(_Ptr<avl_tree> tree, unsigned long index, void** value_address);
 
@@ -129,7 +129,7 @@ int avl_verify(_Ptr<avl_tree> tree);
 
 void avl_print_tree(_Ptr<avl_tree> tree, _Ptr<int (char* , void* )> key_printer);
 
-avl_node * avl_get_first(_Ptr<avl_tree> tree);
+avl_node * avl_get_first(avl_tree *tree);
 
 avl_node * avl_get_prev(avl_node *node);
 

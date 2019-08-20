@@ -99,7 +99,7 @@ static void avl_tree_free_helper(avl_node *node : itype(_Ptr<avl_node> ) , _Ptr<
   free (node);
 }
   
-void avl_tree_free(_Ptr<avl_tree> tree, _Ptr<int (void* )> free_key_fun)
+void avl_tree_free(avl_tree *tree, _Ptr<int (void* )> free_key_fun)
 {
   if (tree->length) {
     avl_tree_free_helper (tree->root->right, free_key_fun);
@@ -114,7 +114,7 @@ void avl_tree_free(_Ptr<avl_tree> tree, _Ptr<int (void* )> free_key_fun)
   free (tree);
 }
 
-int avl_insert(_Ptr<avl_tree> ob, void *key)
+int avl_insert(avl_tree *ob, void *key)
 {
   if (!(ob->root->right)) {
     avl_node * node = avl_node_new (key, ob->root);
@@ -335,7 +335,7 @@ int avl_get_by_key(_Ptr<avl_tree> tree, void *key, void** value_address)
   }
 }
 
-int avl_delete(_Ptr<avl_tree> tree, void *key, _Ptr<int (void* )> free_key_fun)
+int avl_delete(avl_tree *tree, void *key, _Ptr<int (void* )> free_key_fun)
 {
   avl_node *x, *y, *p, *q, *r, *top, *x_child;
   int shortened_side, shorter;
@@ -644,7 +644,7 @@ int avl_iterate_inorder(_Ptr<avl_tree> tree, _Ptr<int (void* , void* )> iter_fun
   }
 }
 
-avl_node * avl_get_first(_Ptr<avl_tree> tree)
+avl_node * avl_get_first(avl_tree *tree)
 {
     avl_node *node;
     
