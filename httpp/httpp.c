@@ -140,7 +140,7 @@ void httpp_initialize(_Ptr<http_parser_t> parser, _Ptr<http_varlist_t> defaults)
         size_t i;
 
         for (i = 0; i < list->var.values; i++) {
-            httpp_setvar(parser, list->var.name, list->var.value[i]);
+            httpp_setvar(parser, (const char *)list->var.name, &(list->var.value[i]));
         }
 
         list = list->next;
@@ -303,7 +303,7 @@ static int hex(char c)
 
 static _Ptr<char> url_unescape(const char *src, size_t len)
 {
-    unsigned char *decoded;
+    _Ptr<unsigned char> decoded = NULL;
     size_t i;
     char *dst;
     int done = 0;
@@ -347,7 +347,7 @@ static _Ptr<char> url_unescape(const char *src, size_t len)
 
     *dst = 0; /* null terminator */
 
-    return (char *)decoded;
+    return /*(char *)*/(_Ptr<char>)decoded;
 }
 
 static void parse_query_element(_Ptr<avl_tree> tree, const char *start, const char *mid, const char *end)
@@ -376,7 +376,7 @@ static void parse_query_element(_Ptr<avl_tree> tree, const char *start, const ch
 
     value = url_unescape(mid + 1, valuelen);
 
-    _httpp_set_param_nocopy(tree, key, value, 0);
+    _httpp_set_param_nocopy(tree, key, (char *)value, 0);
 }
 
 static void parse_query(_Ptr<avl_tree> tree, const char *query, size_t len)
@@ -538,7 +538,7 @@ int httpp_parse(_Ptr<http_parser_t> parser, _Ptr<const char> http_data, unsigned
     }
 
     if (parser->uri != NULL) {
-        httpp_setvar(parser, HTTPP_VAR_URI, parser->uri);
+        httpp_setvar(parser, HTTPP_VAR_URI, (const char *)parser->uri);
     } else {
         free(data);
         return 0;
@@ -551,17 +551,17 @@ int httpp_parse(_Ptr<http_parser_t> parser, _Ptr<const char> http_data, unsigned
     return 1;
 }
 
-void httpp_deletevar(_Ptr<http_parser_t> parser, const char *name)
+void httpp_deletevar(_Ptr<http_parser_t> parser, const char *name : itype(_Ptr<const char>))
 {
-    http_var_t var;
+    http_var_t var = {};
 
     if (parser == NULL || name == NULL)
         return;
     memset(&var, 0, sizeof(var));
 
-    var.name = (char*)name;
+    var.name = (_Ptr<char>)name;
 
-    avl_delete(parser->vars, (void *)&var, _free_vars);
+    avl_delete((avl_tree *)parser->vars, (void *)&var, _free_vars);
 }
 
 void httpp_setvar(_Ptr<http_parser_t> parser, const char *name : itype(_Nt_array_ptr<const char> ) , const char *value : itype(_Nt_array_ptr<const char> ) )
@@ -574,7 +574,7 @@ void httpp_setvar(_Ptr<http_parser_t> parser, const char *name : itype(_Nt_array
     var = (http_var_t *)calloc(1, sizeof(http_var_t));
     if (var == NULL) return;
 
-    var->value = calloc(1, sizeof(*var->value));
+    var->value = (_Ptr<_Nt_array_ptr<char>>)calloc(1, sizeof(*var->value));
     if (!var->value) {
         free(var);
         return;
@@ -585,16 +585,16 @@ void httpp_setvar(_Ptr<http_parser_t> parser, const char *name : itype(_Nt_array
     var->value[0] = strdup(value);
 
     if (httpp_getvar(parser, name) == NULL) {
-        avl_insert(parser->vars, (void *)var);
+        avl_insert((avl_tree *)parser->vars, (void *)var);
     } else {
-        avl_delete(parser->vars, (void *)var, _free_vars);
-        avl_insert(parser->vars, (void *)var);
+        avl_delete((avl_tree *)parser->vars, (void *)var, _free_vars);
+        avl_insert((avl_tree *)parser->vars, (void *)var);
     }
 }
 
 const char * httpp_getvar(_Ptr<http_parser_t> parser, const char *name)
 {
-    http_var_t var;
+    http_var_t var = {};
     _Ptr<http_var_t> found = NULL;
     void* fp = NULL;
 
