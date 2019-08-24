@@ -29,11 +29,11 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio_checked.h>
+#include <stdlib_checked.h>
 #include <stdarg.h>
-#include <string.h>
-#include <time.h>
+#include <string_checked.h>
+#include <time_checked.h>
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -41,7 +41,7 @@
 #include <sys/stat.h>
 #endif
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#include <unistd_checked.h>
 #endif
 
 

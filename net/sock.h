@@ -34,7 +34,7 @@
 #endif
 
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#include <unistd_checked.h>
 #elif _WIN32
 #include <compat.h>
 #endif

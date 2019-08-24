@@ -28,9 +28,9 @@
 
 #include <sys/types.h>
 #include <strings.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <string_checked.h>
+#include <stdlib_checked.h>
+#include <stdio_checked.h>
 
 #include "encoding.h"
 

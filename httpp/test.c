@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdio_checked.h>
 
 #include <avl/avl.h>
 #include "httpp.h"

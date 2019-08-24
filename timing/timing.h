@@ -29,7 +29,7 @@
 
 #include <sys/types.h>
 #ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
+#include <inttypes_checked.h>
 #elif defined(HAVE_STDINT_H)
 #include <stdint.h>
 #endif
