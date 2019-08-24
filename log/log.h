@@ -44,22 +44,21 @@
 #endif
 
 void log_initialize(void);
-int log_open_file(FILE *file);
-int log_open(const char *filename);
-int log_open_with_buffer(const char *filename, int size);
-void log_set_level(int log_id, unsigned level);
-void log_set_trigger(int id, unsigned trigger);
-int  log_set_filename(int id, const char *filename);
-void log_set_lines_kept (int log_id, unsigned int count);
-void log_contents (int log_id, char **_contents, unsigned int *_len);
+int log_open_file(_Ptr<FILE> file);
+int log_open(_Nt_array_ptr<const char> filename);
+int log_open_with_buffer(_Ptr<const char> filename, int size);
+void log_set_level(int log_id, unsigned int level);
+void log_set_trigger(int id, unsigned int trigger);
+int log_set_filename(int id, _Nt_array_ptr<const char> filename);
+void log_set_lines_kept(int log_id, unsigned int count);
+void log_contents(int log_id, _Ptr<_Nt_array_ptr<char>> _contents, _Ptr<unsigned int> _len);
 int log_set_archive_timestamp(int id, int value);
 void log_flush(int log_id);
 void log_reopen(int log_id);
 void log_close(int log_id);
 void log_shutdown(void);
 
-void log_write(int log_id, unsigned priority, const char *cat, const char *func, 
-        const char *fmt, ...);
-void log_write_direct(int log_id, const char *fmt, ...);
+void log_write(int log_id, unsigned int priority, const char *cat : itype(_Ptr<const char> ) , _Ptr<const char> func, _Nt_array_ptr<const char> fmt, ...);
+void log_write_direct(int log_id, _Nt_array_ptr<const char> fmt, ...);
 
 #endif  /* __LOG_H__ */
