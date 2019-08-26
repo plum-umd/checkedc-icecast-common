@@ -105,12 +105,12 @@ void sock_shutdown(void)
 */
 _Ptr<char> sock_get_localip(_Ptr<char> buff, int len)
 {
-    char temp[1024];
+    char temp _Checked[1024]; /* Hasan: Added _Checked type */
 
-    if (gethostname(temp, sizeof(temp)) != 0)
+    if (gethostname((char*)temp, sizeof(temp)) != 0) /* Hasan: Added cast because of above _Checked type */
         return NULL;
 
-    if (resolver_getip(temp, buff, len))
+    if (resolver_getip((char*)temp, (char*)buff, len)) /* Hasan: temp: Added cast because of above _Checked type. buff: Cast is not for an itype, so just inconsistent types */
         return buff;
 
     return NULL;
@@ -378,7 +378,7 @@ int sock_write_bytes(int sock, const void *buff, size_t len)
 */
 int sock_write_string(int sock, _Nt_array_ptr<const char> buff)
 {
-    return (sock_write_bytes(sock, buff, strlen(buff)) > 0);
+    return (sock_write_bytes(sock, (const void *)buff, strlen(buff)) > 0); /* Hasan: Cast is not for itype, so it's needed */
 }
 
 /* sock_write
@@ -393,7 +393,7 @@ int sock_write(int sock, _Ptr<const char> fmt, ...)
     va_list ap;
 
     va_start (ap, fmt);
-    rc = sock_write_fmt (sock, fmt, ap);
+    rc = sock_write_fmt (sock, (const char*)fmt, ap); /* Hasan: Cast is not for itype, so it's needed */
     va_end (ap);
 
     return rc;
@@ -430,12 +430,14 @@ int sock_write_fmt(sock_t sock, const char *fmt, va_list ap)
 #else
 int sock_write_fmt(int sock, const char *fmt, va_list ap)
 {
-   _Nt_array_ptr<char> buffer;
-_Nt_array_ptr<char> buff = buffer;
+   char buffer _Checked[1024]; /* Hasan: Manually added the _Checked type and looked up value to put it back in */
+_Nt_array_ptr<char> buff : count(1024) = (_Nt_array_ptr<char>)buffer;
  
     int len;
     int rc = SOCK_ERROR;
     va_list ap_retry;
+
+    int temp; /* Hasan: Added variable for increment expression error */
 
     va_copy (ap_retry, ap);
 
@@ -444,16 +446,17 @@ _Nt_array_ptr<char> buff = buffer;
     if (len > 0)
     {
         if ((size_t)len < sizeof (buffer))   /* common case */
-            rc = sock_write_bytes(sock, buff, (size_t)len);
+            rc = sock_write_bytes(sock, (const void*)buff, (size_t)len); /* Hasan: Not an itype situation */
         else
         {
             /* truncated */
-            buff = malloc (++len);
+	    temp = ++len;
+            buff = (_Nt_array_ptr<char>)malloc (temp); /* Hasan: TODO: change type to match Checked malloc annotation */
             if (buff)
             {
                 len = vsnprintf (buff, len, fmt, ap_retry);
                 if (len > 0)
-                    rc = sock_write_bytes (sock, buff, len);
+                    rc = sock_write_bytes (sock, (const void*)buff, len); /* Hasan: Not an itype situation */
                 free (buff);
             }
         }
