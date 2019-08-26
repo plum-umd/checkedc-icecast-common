@@ -83,7 +83,7 @@ _Ptr<avl_tree> avl_tree_new(_Ptr<int (void* , void* , void* )> compare_fun, void
   }
 }
   
-static void avl_tree_free_helper(avl_node *node : itype(_Ptr<avl_node> ) , _Ptr<int (void* )> free_key_fun)
+static void avl_tree_free_helper(avl_node *node : itype(_Ptr<avl_node> ) , avl_free_key_fun_type free_key_fun)
 {
   if (node->left) {
     avl_tree_free_helper (node->left, free_key_fun);
@@ -99,7 +99,7 @@ static void avl_tree_free_helper(avl_node *node : itype(_Ptr<avl_node> ) , _Ptr<
   free (node);
 }
   
-void avl_tree_free(_Ptr<avl_tree> tree, avl_free_key_fun_type free_key_fun : itype(_Ptr<int (void* )> ) )
+void avl_tree_free(_Ptr<avl_tree> tree, avl_free_key_fun_type free_key_fun)
 {
   if (tree->length) {
     avl_tree_free_helper (tree->root->right, free_key_fun);
@@ -1027,7 +1027,7 @@ static char balance_chars[3] = {'\\', '-', '/'};
 
 static int default_key_printer(_Nt_array_ptr<char> buffer, void* key)
 {
-  return snprintf (buffer, AVL_KEY_PRINTER_BUFLEN, "%p", key);
+  return snprintf ((char*)buffer, AVL_KEY_PRINTER_BUFLEN, "%p", key); /* Hasan: If this statement was in a checked scope, then the cast can be removed */
 }  
 
 /*
@@ -1063,11 +1063,11 @@ static void print_connectors(_Ptr<link_node> link)
  * representation.
  */
 
-static void print_node(_Ptr<int (_Array_ptr<char> , void* )> key_printer, avl_node *node : itype(_Ptr<avl_node> ) , _Ptr<link_node> link)
+static void print_node(avl_key_printer_fun_type key_printer, avl_node *node : itype(_Ptr<avl_node> ) , _Ptr<link_node> link)
 {
-  char buffer[256];
+  char buffer _Checked[256];
   unsigned int width;
-  width = key_printer (buffer, node->key);
+  width = key_printer ((_Nt_array_ptr<char>)buffer, node->key);
 
   if (node->right) {
       link_node here = {};
@@ -1095,7 +1095,7 @@ static void print_node(_Ptr<int (_Array_ptr<char> , void* )> key_printer, avl_no
   } 
 }  
 
-void avl_print_tree(_Ptr<avl_tree> tree, _Ptr<int (_Nt_array_ptr<char> , void* )> key_printer)
+void avl_print_tree(_Ptr<avl_tree> tree, avl_key_printer_fun_type key_printer)
 {
   link_node top = {NULL, 0, 0};
   if (!key_printer) {

@@ -57,8 +57,8 @@ struct _avl_tree;
 typedef int (*avl_key_compare_fun_type)    (void * compare_arg, void * a, void * b);
 typedef int (*avl_iter_fun_type)    (void * key, void * iter_arg);
 typedef int (*avl_iter_index_fun_type)    (unsigned long index, void * key, void * iter_arg);
-typedef int (*avl_free_key_fun_type)    (void * key);
-typedef int (*avl_key_printer_fun_type)    (char *, void *);
+typedef _Ptr<int (void * key)> avl_free_key_fun_type;
+typedef _Ptr<int (_Nt_array_ptr<char>, void *)> avl_key_printer_fun_type;
 
 /*
  * <compare_fun> and <compare_arg> let us associate a particular compare
@@ -107,7 +107,7 @@ typedef struct _avl_tree {
 _Ptr<avl_tree> avl_tree_new(_Ptr<int (void* , void* , void* )> compare_fun, void* compare_arg);
 avl_node *avl_node_new(void *key, avl_node *parent) : itype(_Ptr<avl_node> ) ;
 
-void avl_tree_free(_Ptr<avl_tree> tree, avl_free_key_fun_type free_key_fun : itype(_Ptr<int (void* )> ) );
+void avl_tree_free(_Ptr<avl_tree> tree, avl_free_key_fun_type free_key_fun);
 
 int avl_insert(_Ptr<avl_tree> ob, void *key);
 
@@ -127,7 +127,7 @@ int avl_get_span_by_two_keys(_Ptr<avl_tree> tree, void *low_key, void *high_key,
 
 int avl_verify(_Ptr<avl_tree> tree);
 
-void avl_print_tree(_Ptr<avl_tree> tree, _Ptr<int (_Nt_array_ptr<char> , void* )> key_printer);
+void avl_print_tree(_Ptr<avl_tree> tree, avl_key_printer_fun_type key_printer);
 
 avl_node * avl_get_first(_Ptr<avl_tree> tree);
 
