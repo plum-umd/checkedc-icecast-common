@@ -33,13 +33,13 @@
 typedef struct {
     /* the local id for the thread, and it's name */
     long thread_id;
-    _Nt_array_ptr<char> name;
+    char *name; /* Hasan: TODO: Change back to _Nt_array_ptr<char> and fix all relevant types */
 
     /* the time the thread was created */
     time_t create_time;
     
     /* the file and line which created this thread */
-    _Nt_array_ptr<char> file;
+    char *file; /* Hasan: TODO: Change back to _Nt_array_ptr<char> and fix all relevant types */
     int line;
 
     /* is the thread running detached? */
@@ -168,7 +168,7 @@ void thread_initialize_with_log_id(int log_id);
 void thread_shutdown(void);
 
 /* creation, destruction, locking, unlocking, signalling and waiting */
-thread_type * thread_create_c(_Nt_array_ptr<char> name, _Ptr<void* (void* )> start_routine, void *arg : itype(_Ptr<void> ) , int detached, int line, _Nt_array_ptr<char> file);
+thread_type *thread_create_c(_Nt_array_ptr<char> name, _Ptr<void* (void* )> start_routine, void *arg : itype(_Ptr<void> ) , int detached, int line, _Nt_array_ptr<char> file);
 void thread_mutex_create_c(_Ptr<mutex_t> mutex, int line, _Ptr<char> file);
 void thread_mutex_lock_c(_Ptr<mutex_t> mutex, int line, _Ptr<char> file);
 void thread_mutex_unlock_c(_Ptr<mutex_t> mutex, int line, _Ptr<char> file);
