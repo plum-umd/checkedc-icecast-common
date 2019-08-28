@@ -80,7 +80,7 @@ typedef struct http_var_tag http_var_t;
 struct http_var_tag {
     char *name;
     size_t values;
-    _Array_ptr<_Nt_array_ptr<char>> value;
+    _Array_ptr<_Nt_array_ptr<char>> value : count(values);
 };
 
 typedef struct http_varlist_tag {
@@ -124,10 +124,10 @@ httpp_request_info_t httpp_request_info(httpp_request_type_e req);
 
 _Ptr<http_parser_t> httpp_create_parser(void);
 void httpp_initialize(_Ptr<http_parser_t> parser, _Ptr<http_varlist_t> defaults);
-int httpp_parse(_Ptr<http_parser_t> parser, const char *http_data : itype(_Ptr<const char> ) , unsigned long len);
+int httpp_parse(_Ptr<http_parser_t> parser, _Ptr<const char> http_data , unsigned long len);
 int httpp_parse_icy(http_parser_t *parser, const char *http_data, unsigned long len);
 int httpp_parse_response(_Ptr<http_parser_t> parser, _Ptr<const char> http_data, unsigned long len, const char *uri : itype(_Nt_array_ptr<const char> ) );
-int httpp_parse_postdata(_Ptr<http_parser_t> parser, _Array_ptr<const char> body_data, size_t len);
+int httpp_parse_postdata(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> body_data : count(len), size_t len);
 void httpp_setvar(_Ptr<http_parser_t> parser, const char *name : itype(_Nt_array_ptr<const char> ) , const char *value : itype(_Nt_array_ptr<const char> ) );
 void httpp_deletevar(_Ptr<http_parser_t> parser, const char *name);
 const char *httpp_getvar(_Ptr<http_parser_t> parser, const char *name) : itype(_Nt_array_ptr<const char> ) ;
@@ -139,7 +139,7 @@ const char *httpp_get_param(_Ptr<http_parser_t> parser, _Ptr<const char> name) :
 const http_var_t *httpp_get_param_var(_Ptr<http_parser_t> parser, const char *name) : itype(_Ptr<const http_var_t> ) ;
 const http_var_t *httpp_get_any_var(_Ptr<http_parser_t> parser, httpp_ns_t ns, const char *name) : itype(_Ptr<const http_var_t> ) ;
 _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns);
-void httpp_free_any_key(_Array_ptr<_Ptr<char>> keys);
+void httpp_free_any_key(char **keys);
 int httpp_addref(_Ptr<http_parser_t> parser);
 int httpp_release(_Ptr<http_parser_t> parser);
 

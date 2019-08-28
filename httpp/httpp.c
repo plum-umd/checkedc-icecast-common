@@ -53,7 +53,7 @@ static int _compare_vars(void* compare_arg, void *a, void *b);
 static int _free_vars(void *key);
 
 /* For avl tree manipulation */
-static void parse_query(_Ptr<avl_tree> tree, const char *query : itype(_Array_ptr<const char> ) , size_t len);
+static void parse_query(_Ptr<avl_tree> tree, _Nt_array_ptr<const char> query : count(len) , size_t len);
 static const char *_httpp_get_param(_Ptr<avl_tree> tree, const char *name) : itype(_Nt_array_ptr<const char> ) ;
 static void _httpp_set_param_nocopy(_Ptr<avl_tree> tree, char *name, _Nt_array_ptr<char> value, int replace);
 static void _httpp_set_param(_Ptr<avl_tree> tree, _Nt_array_ptr<const char> name, _Nt_array_ptr<const char> value);
@@ -147,7 +147,7 @@ void httpp_initialize(_Ptr<http_parser_t> parser, _Ptr<http_varlist_t> defaults)
     }
 }
 
-static int split_headers(_Array_ptr<char> data, unsigned long len, char **line : itype(_Array_ptr<_Array_ptr<char>> ) )
+static int split_headers(_Nt_array_ptr<char> data : count(len), unsigned long len, _Array_ptr<_Nt_array_ptr<char>> line : count(MAX_HEADERS))
 {
     /* first we count how many lines there are 
     ** and set up the line[] array     
@@ -166,7 +166,7 @@ static int split_headers(_Array_ptr<char> data, unsigned long len, char **line :
             if (i + 1 < len) {
                 if (data[i + 1] == '\n' || data[i + 1] == '\r')
                     break;
-                line[lines] = &data[i + 1];
+                line[lines] = (_Nt_array_ptr<char>)&data[i + 1]; /* Hasan: The compiler should be able to handle this assignment, but I have to use a cast for now. Prod    uces warning, need 'where' clause to provide bounds */
             }
         }
     }
@@ -177,7 +177,7 @@ static int split_headers(_Array_ptr<char> data, unsigned long len, char **line :
     return lines;
 }
 
-static void parse_headers(_Ptr<http_parser_t> parser, char **line : itype(_Array_ptr<_Nt_array_ptr<char>> ) , int lines)
+static void parse_headers(_Ptr<http_parser_t> parser, _Array_ptr<_Nt_array_ptr<char>> line : count(lines) , int lines)
 {
     int i, l;
     int whitespace, slen;
@@ -201,7 +201,7 @@ static void parse_headers(_Ptr<http_parser_t> parser, char **line : itype(_Array
                         i++;
 
                     if (i < slen)
-                        value = &line[l][i];
+                        value = (_Nt_array_ptr<char>)&line[l][i]; /* Hasan: The compiler should be able to handle this assignment, but I have to use a cast for now. Produces warning, need 'where' clause to provide bounds */
                     
                     break;
                 }
@@ -218,19 +218,19 @@ static void parse_headers(_Ptr<http_parser_t> parser, char **line : itype(_Array
 
 int httpp_parse_response(_Ptr<http_parser_t> parser, _Ptr<const char> http_data, unsigned long len, const char *uri : itype(_Nt_array_ptr<const char> ) )
 {
-    _Array_ptr<char> data = NULL;
-    _Nt_array_ptr<_Nt_array_ptr<char>> line;
+    _Nt_array_ptr<char> data : count(len + 1) = NULL;
+    _Nt_array_ptr<char> line _Checked[MAX_HEADERS] = {0}; /* Hasan: The tool erased the MAX_HEADERS variable */
     int lines, slen,i, whitespace=0, where=0,code;
-   _Nt_array_ptr<char> version = ((void *)0);
-_Nt_array_ptr<char> resp_code = ((void *)0);
-_Nt_array_ptr<char> message = ((void *)0);
+   _Nt_array_ptr<char> version = NULL; /* Hasan: The NULL macro was expanded to ((void *)0) during the conversion process */
+_Nt_array_ptr<char> resp_code = NULL; /* Hasan: The NULL macro was expanded to ((void *)0) during the conversion process */
+_Nt_array_ptr<char> message = NULL; /* Hasan: The NULL macro was expanded to ((void *)0) during the conversion process */
  
     
     if(http_data == NULL)
         return 0;
 
     /* make a local copy of the data, including 0 terminator */
-    data = (char *)malloc(len+1);
+    data = (_Nt_array_ptr<char>)malloc(len+1);
     if (data == NULL) return 0;
     memcpy(data, http_data, len);
     data[len] = 0;
@@ -250,9 +250,9 @@ _Nt_array_ptr<char> message = ((void *)0);
             whitespace = 0;
             where++;
             if(where == 1)
-                resp_code = &line[0][i];
+                resp_code = (_Nt_array_ptr<char>)&line[0][i]; /* Hasan: The compiler should be able to handle this assignment, but I have to use a cast for now. Prod    uces warning, need 'where' clause to provide bounds */
             else {
-                message = &line[0][i];
+                message = (_Nt_array_ptr<char>)&line[0][i]; /* Hasan: The compiler should be able to handle this assignment, but I have to use a cast for now. Prod    uces warning, need 'where' clause to provide bounds */
                 break;
             }
         }
@@ -279,7 +279,7 @@ _Nt_array_ptr<char> message = ((void *)0);
     return 1;
 }
 
-int httpp_parse_postdata(_Ptr<http_parser_t> parser, _Array_ptr<const char> body_data, size_t len)
+int httpp_parse_postdata(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> body_data : count(len), size_t len)
 {
     const char *header = httpp_getvar(parser, "content-type");
 
@@ -304,16 +304,18 @@ static int hex(char c)
         return -1;
 }
 
-static _Nt_array_ptr<char> url_unescape(_Array_ptr<const char> src, size_t len)
+static _Nt_array_ptr<char> url_unescape(_Array_ptr<const char> src : count(len), size_t len)
 {
-    unsigned char *decoded;
+    //unsigned char *decoded;
+    _Nt_array_ptr<char> decoded : byte_count(len + 1) = (_Nt_array_ptr<char>)calloc(1, len + 1); /* Hasan: Cast from 'calloc' causes warning. Should use Checked calloc */
     size_t i;
-    char *dst;
+    //char *dst;
+    _Nt_array_ptr<char> dst : bounds(decoded, ((char*)decoded) + len + 1) = decoded;
     int done = 0;
 
-    decoded = calloc(1, len + 1);
+    //decoded = calloc(1, len + 1);
 
-    dst = (char *)decoded;
+    //dst = (char *)decoded;
 
     for(i=0; i < len; i++) {
         switch(src[i]) {
@@ -350,15 +352,15 @@ static _Nt_array_ptr<char> url_unescape(_Array_ptr<const char> src, size_t len)
 
     *dst = 0; /* null terminator */
 
-    return (char *)decoded;
+    return decoded;
 }
 
-static void parse_query_element(_Ptr<avl_tree> tree, _Array_ptr<const char> start, _Nt_array_ptr<const char> mid, _Array_ptr<const char> end)
+static void parse_query_element(_Ptr<avl_tree> tree, _Nt_array_ptr<const char> start : bounds(start, end), _Nt_array_ptr<const char> mid, _Nt_array_ptr<const char> end)
 {
     size_t keylen;
-    _Nt_array_ptr<char> key = NULL;
+    _Nt_array_ptr<char> key : count(keylen + 1) = NULL;
     size_t valuelen;
-    _Nt_array_ptr<char> value = NULL;
+    _Nt_array_ptr<char> value : count(valuelen) = NULL;
 
     if (start >= end)
         return;
@@ -373,18 +375,18 @@ static void parse_query_element(_Ptr<avl_tree> tree, _Array_ptr<const char> star
     if (!keylen || !valuelen)
         return;
 
-    key = malloc(keylen + 1);
+    key = (_Nt_array_ptr<char>)malloc(keylen + 1);
     memcpy(key, start, keylen);
     key[keylen] = 0;
 
     value = url_unescape(mid + 1, valuelen);
 
-    _httpp_set_param_nocopy(tree, key, value, 0);
+    _httpp_set_param_nocopy(tree, (char*)key, value, 0); /* Hasan: TODO: See why the second parameter of '_httpp_set_param_nocopy' is wild */
 }
 
-static void parse_query(_Ptr<avl_tree> tree, const char *query : itype(_Array_ptr<const char> ) , size_t len)
+static void parse_query(_Ptr<avl_tree> tree, _Nt_array_ptr<const char> query : count(len) , size_t len)
 {
-    _Array_ptr<const char> start =  query;
+    _Nt_array_ptr<const char> start =  query;
     _Nt_array_ptr<const char> mid =  NULL;
     size_t i;
 
@@ -394,37 +396,38 @@ static void parse_query(_Ptr<avl_tree> tree, const char *query : itype(_Array_pt
     for (i = 0; i < len; i++) {
         switch (query[i]) {
             case '&':
-                parse_query_element(tree, start, mid, &(query[i]));
-                start = &(query[i + 1]);
+                parse_query_element(tree, start, mid, (_Nt_array_ptr<char>)&(query[i])); /* Hasan: The cast is a result of a compiler mishandeling of the '&' operator */
+                start = (_Nt_array_ptr<char>)&(query[i + 1]); /* Hasan: The cast is a result of a compiler mishandeling of the '&' operator */
                 mid = NULL;
             break;
             case '=':
-                mid = &(query[i]);
+                mid = (_Nt_array_ptr<char>)&(query[i]); /* Hasan: The cast is a result of a compiler mishandeling of the '&' operator */
             break;
         }
     }
 
-    parse_query_element(tree, start, mid, &(query[i]));
+    parse_query_element(tree, start, mid, (_Nt_array_ptr<char>)&(query[i])); /* Hasan: The cast is a result of a compiler mishandeling of the '&' operator */
 }
 
-int httpp_parse(_Ptr<http_parser_t> parser, const char *http_data : itype(_Ptr<const char> ) , unsigned long len)
+int httpp_parse(_Ptr<http_parser_t> parser, _Ptr<const char> http_data , unsigned long len)
 {
-   _Array_ptr<char> data = NULL;
+   _Nt_array_ptr<char> data : count(len + 1) = NULL;
 _Nt_array_ptr<char> tmp = NULL;
  
-    _Nt_array_ptr<char*> line; /* limited to 32 lines, should be more than enough */
+    _Nt_array_ptr<char> line _Checked[MAX_HEADERS] = {}; /* limited to 32 lines, should be more than enough */
     int i;
     int lines;
-    char *req_type = NULL;
+    _Nt_array_ptr<char> req_type = NULL;
     _Nt_array_ptr<char> uri =  NULL;
     _Nt_array_ptr<char> version =  NULL;
     int whitespace, where, slen;
+    size_t call_for_strlen; /* Hasan: Compiler doesn't like function calls in arguments, so made temp variable */
 
     if (http_data == NULL)
         return 0;
 
     /* make a local copy of the data, including 0 terminator */
-    data = (char *)malloc(len+1);
+    data = (_Nt_array_ptr<char>)malloc(len+1); /* Hasan: TODO: Use Checked malloc */
     if (data == NULL) return 0;
     memcpy(data, http_data, len);
     data[len] = 0;
@@ -452,10 +455,10 @@ _Nt_array_ptr<char> tmp = NULL;
                 where++;
                 switch (where) {
                     case 1:
-                        uri = &line[0][i];
+                        uri = (_Nt_array_ptr<char>)&line[0][i]; /* Hasan: Compiler issue with '&' */
                     break;
                     case 2:
-                        version = &line[0][i];
+                        version = (_Nt_array_ptr<char>)&line[0][i]; /* Hasan: Compiler issue with '&' */
                     break;
                     case 3:
                         /* There is an extra element in the request line. This is not HTTP. */
@@ -467,25 +470,26 @@ _Nt_array_ptr<char> tmp = NULL;
         }
     }
 
-    parser->req_type = httpp_str_to_method(req_type);
+    parser->req_type = httpp_str_to_method((const char*)req_type); /* Hasan: TODO: See if this parameter can be changed to _Nt_array */
 
     if (uri != NULL && strlen(uri) > 0) {
         _Nt_array_ptr<char> query = NULL;
-        if((query = strchr(uri, '?')) != NULL) {
+        if((query = (_Nt_array_ptr<char>)strchr(uri, '?')) != NULL) { /* Hasan: Cast is because of itype. Shouldn't be needed if in checked scope */
             httpp_setvar(parser, HTTPP_VAR_RAWURI, uri);
             httpp_setvar(parser, HTTPP_VAR_QUERYARGS, query);
             *query = 0;
             query++;
-            parse_query(parser->queryvars, query, strlen(query));
+	    call_for_strlen = strlen(query); /* Hasan: Compiler doesn't like function calls in arguments, so made temp variable */
+            parse_query(parser->queryvars, query, call_for_strlen);
         }
 
-        parser->uri = strdup(uri);
+        parser->uri = (_Nt_array_ptr<char>)strdup(uri); /* Hasan: Cast is because of itype. Shouldn't be needed if in checked scope */
     } else {
         free(data);
         return 0;
     }
 
-    if ((version != NULL) && ((tmp = strchr(version, '/')) != NULL)) {
+    if ((version != NULL) && ((tmp = (_Nt_array_ptr<char>)strchr(version, '/')) != NULL)) { /* Hasan: Cast is because of itype. Shouldn't be needed if in checked scope */
         tmp[0] = '\0';
         if ((strlen(version) > 0) && (strlen(&tmp[1]) > 0)) {
             httpp_setvar(parser, HTTPP_VAR_PROTOCOL, version);
@@ -587,7 +591,7 @@ void httpp_setvar(_Ptr<http_parser_t> parser, const char *name : itype(_Nt_array
 
     var->name = strdup(name);
     var->values = 1;
-    var->value[0] = strdup(value);
+    var->value[0] = (_Nt_array_ptr<char>)strdup(value); /* Hasan: Cast due to itype */
 
     if (httpp_getvar(parser, name) == NULL) {
         avl_insert(parser->vars, (void *)var);
@@ -622,7 +626,8 @@ const char *httpp_getvar(_Ptr<http_parser_t> parser, const char *name) : itype(_
 static void _httpp_set_param_nocopy(_Ptr<avl_tree> tree, char *name, _Nt_array_ptr<char> value, int replace)
 {
     http_var_t *var, *found;
-    _Array_ptr<_Nt_array_ptr<char>> n = NULL;
+    size_t nbounds = 0; /* Hasan: Created to give bounds to n. If we had 'where' clause it can be replaced */
+    _Array_ptr<_Nt_array_ptr<char>> n : count(nbounds) = NULL;
 
     if (name == NULL || value == NULL)
         return;
@@ -643,7 +648,10 @@ static void _httpp_set_param_nocopy(_Ptr<avl_tree> tree, char *name, _Nt_array_p
         var = found;
     }
 
-    n = realloc(var->value, sizeof(*n)*(var->values + 1));
+
+    nbounds = var->values + 1; /* Hasan: Assigned bounds value before realloc */
+
+    n = realloc(var->value, sizeof(*n)*(nbounds));
     if (!n) {
         if (replace || !found) {
             free(name);
@@ -654,7 +662,9 @@ static void _httpp_set_param_nocopy(_Ptr<avl_tree> tree, char *name, _Nt_array_p
     }
 
     var->value = n;
-    var->value[var->values++] = value;
+
+    nbounds = var->values++; /* Hasan: Used local variable in place of modifying expression */
+    var->value[nbounds] = value;
 
     if (replace && found) {
         avl_delete(tree, (void *)found, _free_vars);
@@ -666,10 +676,11 @@ static void _httpp_set_param_nocopy(_Ptr<avl_tree> tree, char *name, _Nt_array_p
 
 static void _httpp_set_param(_Ptr<avl_tree> tree, _Nt_array_ptr<const char> name, _Nt_array_ptr<const char> value)
 {
+    size_t call_for_strlen = strlen(value); /* Hasan: Compiler doesn't like function calls in arguments, so made temp variable */
     if (name == NULL || value == NULL)
         return;
 
-    _httpp_set_param_nocopy(tree, strdup(name), url_unescape(value, strlen(value)), 1);
+    _httpp_set_param_nocopy(tree, strdup(name), url_unescape(value, call_for_strlen), 1); /* Hasan: Compiler doesn't like function calls in arguments, so made temp variable */
 }
 
 static http_var_t *_httpp_get_param_var(_Ptr<avl_tree> tree, const char *name) : itype(_Ptr<http_var_t> ) 
@@ -702,12 +713,12 @@ static const char *_httpp_get_param(_Ptr<avl_tree> tree, const char *name) : ity
 
 void httpp_set_query_param(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> name, const char *value : itype(_Nt_array_ptr<const char> ) )
 {
-    return _httpp_set_param(parser->queryvars, name, value);
+    return _httpp_set_param(parser->queryvars, name, (_Nt_array_ptr<char>)value); /* Hasan: TODO: See if itype can be removed */
 }
 
 const char *httpp_get_query_param(_Ptr<http_parser_t> parser, _Ptr<const char> name) : itype(_Nt_array_ptr<const char> ) 
 {
-    return _httpp_get_param(parser->queryvars, name);
+    return _httpp_get_param(parser->queryvars, (const char *)name);
 }
 
 void httpp_set_post_param(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> name, _Nt_array_ptr<const char> value)
@@ -717,7 +728,7 @@ void httpp_set_post_param(_Ptr<http_parser_t> parser, _Nt_array_ptr<const char> 
 
 const char *httpp_get_post_param(_Ptr<http_parser_t> parser, _Ptr<const char> name) : itype(_Ptr<const char> ) 
 {
-    return _httpp_get_param(parser->postvars, name);
+    return _httpp_get_param(parser->postvars, (const char *)name);
 }
 
 const http_var_t *httpp_get_param_var(_Ptr<http_parser_t> parser, const char *name) : itype(_Ptr<const http_var_t> ) 
@@ -766,8 +777,8 @@ _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns)
 {
     _Ptr<avl_tree> tree =  NULL;
     avl_node *avlnode;
-    _Array_ptr<_Nt_array_ptr<char>> ret = NULL;
     size_t len;
+    _Array_ptr<_Nt_array_ptr<char>> ret : count(len) = NULL;
     size_t pos = 0;
 
     if (!parser)
@@ -809,9 +820,10 @@ _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns)
         }
 
         if (pos == (len-1)) {
-            _Array_ptr<_Nt_array_ptr<char>> n =  realloc(ret, sizeof(*ret)*(len + 8));
+	    size_t nlen = sizeof(*ret)*(len + 8); /* Hasan: local var to get count */
+            _Array_ptr<_Nt_array_ptr<char>> n : count(nlen) =  realloc(ret, nlen);
             if (!n) {
-                httpp_free_any_key(ret);
+                httpp_free_any_key((char**)ret);
                 return NULL;
             }
             memset(n + len, 0, sizeof(*n)*8);
@@ -819,21 +831,21 @@ _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns)
             len += 8;
         }
 
-        ret[pos] = strdup(var->name);
+        ret[pos] = (_Nt_array_ptr<char>)strdup(var->name); /* Hasan: itype issue. Should be fixed with checked scope */
         if (!ret[pos]) {
-            httpp_free_any_key(ret);
+            httpp_free_any_key((char**)ret);
             return NULL;
         }
 
         pos++;
     }
 
-    return ret;
+    return (_Ptr<_Ptr<char>>)ret; /* Hasan: Added a cast to get rid of return type error. This shouldn't be needed. Compiler error? */
 }
 
-void httpp_free_any_key(_Array_ptr<_Ptr<char>> keys)
+void httpp_free_any_key(char **keys)
 {
-    _Array_ptr<_Ptr<char>> p = NULL;
+    char **p;
 
     if (!keys)
         return;
@@ -846,12 +858,12 @@ void httpp_free_any_key(_Array_ptr<_Ptr<char>> keys)
 
 const char *httpp_get_param(_Ptr<http_parser_t> parser, _Ptr<const char> name) : itype(_Nt_array_ptr<const char> ) 
 {
-    _Nt_array_ptr<const char> ret =  _httpp_get_param(parser->postvars, name);
+    _Nt_array_ptr<const char> ret =  (_Nt_array_ptr<const char>)_httpp_get_param(parser->postvars, (const char *)name); /* Hasan: Cast for return type due to itype */
 
     if (ret)
         return ret;
 
-    return _httpp_get_param(parser->queryvars, name);
+    return _httpp_get_param(parser->queryvars, (const char *)name);
 }
 
 static void httpp_clear(_Ptr<http_parser_t> parser)
@@ -893,7 +905,7 @@ int httpp_release(_Ptr<http_parser_t> parser)
 
 static char *_lowercase(_Array_ptr<char> str) : itype(_Array_ptr<char> ) 
 {
-    _Array_ptr<char> p =  str;
+    char *p = (char*)str; /* Hasan: Made p wild because we don't know the bounds of str. Maybe add strlen(str)? Would need 'where' clause becuase both sides of assignment need to have bounds... */
     for (; *p != '\0'; p++)
         *p = tolower(*p);
 
