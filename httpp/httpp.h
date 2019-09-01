@@ -139,7 +139,7 @@ const char *httpp_get_param(_Ptr<http_parser_t> parser, _Ptr<const char> name) :
 const http_var_t *httpp_get_param_var(_Ptr<http_parser_t> parser, const char *name) : itype(_Ptr<const http_var_t> ) ;
 const http_var_t *httpp_get_any_var(_Ptr<http_parser_t> parser, httpp_ns_t ns, const char *name) : itype(_Ptr<const http_var_t> ) ;
 _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns);
-void httpp_free_any_key(char **keys);
+void httpp_free_any_key(_Nt_array_ptr<_Nt_array_ptr<char>> keys);
 int httpp_addref(_Ptr<http_parser_t> parser);
 int httpp_release(_Ptr<http_parser_t> parser);
 

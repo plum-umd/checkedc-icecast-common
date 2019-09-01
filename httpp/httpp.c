@@ -778,7 +778,7 @@ _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns)
     _Ptr<avl_tree> tree =  NULL;
     avl_node *avlnode;
     size_t len;
-    _Array_ptr<_Nt_array_ptr<char>> ret : count(len) = NULL;
+    _Nt_array_ptr<_Nt_array_ptr<char>> ret : count(len) = NULL;
     size_t pos = 0;
 
     if (!parser)
@@ -800,7 +800,7 @@ _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns)
     if (!tree)
         return NULL;
 
-    ret = calloc(8, sizeof(*ret));
+    ret = (_Nt_array_ptr<_Nt_array_ptr<char>>)calloc(8, sizeof(*ret));
     if (!ret)
         return NULL;
 
@@ -821,9 +821,9 @@ _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns)
 
         if (pos == (len-1)) {
 	    size_t nlen = sizeof(*ret)*(len + 8); /* Hasan: local var to get count */
-            _Array_ptr<_Nt_array_ptr<char>> n : count(nlen) =  realloc(ret, nlen);
+            _Nt_array_ptr<_Nt_array_ptr<char>> n : count(nlen) =  (_Nt_array_ptr<_Nt_array_ptr<char>>)realloc(ret, nlen);
             if (!n) {
-                httpp_free_any_key((char**)ret);
+                httpp_free_any_key(ret);
                 return NULL;
             }
             memset(n + len, 0, sizeof(*n)*8);
@@ -833,19 +833,19 @@ _Ptr<_Ptr<char>> httpp_get_any_key(_Ptr<http_parser_t> parser, httpp_ns_t ns)
 
         ret[pos] = (_Nt_array_ptr<char>)strdup(var->name); /* Hasan: itype issue. Should be fixed with checked scope */
         if (!ret[pos]) {
-            httpp_free_any_key((char**)ret);
+            httpp_free_any_key(ret);
             return NULL;
         }
 
         pos++;
     }
 
-    return (_Ptr<_Ptr<char>>)ret; /* Hasan: Added a cast to get rid of return type error. This shouldn't be needed. Compiler error? */
+    return (_Ptr<_Ptr<char>>)ret; /* Hasan: Added a cast to get rid of return type error. This is because of nested pointers */
 }
 
-void httpp_free_any_key(char **keys)
+void httpp_free_any_key(_Nt_array_ptr<_Nt_array_ptr<char>> keys)
 {
-    char **p;
+    _Nt_array_ptr<_Nt_array_ptr<char>> p = NULL;
 
     if (!keys)
         return;
